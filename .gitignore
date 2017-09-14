@@ -1,0 +1,9 @@
+*.zip
+*.tar
+*.pkl
+*.json
+*.png
+*.jpg
+*.jpeg
+*.mat
+*.npz
