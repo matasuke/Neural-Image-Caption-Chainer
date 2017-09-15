@@ -1,12 +1,13 @@
 import os
 import json
 import argparse
+import pickle
 import numpy as np
 from numpy import random
-
+from tqdm import tqdm
 
 class Tokenizer(object):
-    def __init__(self, args):lang
+    def __init__(self, args):
         self.args = args
         self.lang = self.args.lang
 
@@ -36,13 +37,16 @@ class Tokenizer(object):
 
 
 def words2ids(tokens, word_ids):
-    return [ word_ids[token]['idx'] if token in word_ids else word_ids['<UNK>']['idx'] for token in tokens ]
+    return [ word_ids[token] if token in word_ids else word_ids['<UNK>'] for token in tokens ]
 
-def loadpickle(p_file):
+def load_pickle(p_file):
     with open(p_file, 'rb') as f:
         data = pickle.load(f)
     return data
 
+def save_pickle(out_data, p_file):
+    with open(p_file, 'wb') as f:
+        pickle.dump(out_data, f, pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -70,15 +74,15 @@ if __name__ == '__main__':
     parser.add_argument('--period', '-p', type=bool, default=True,
                         help="remove periods if captions has it"
     )
-    parser.add_argument('--ratio', '-r', type=float, default=0,5,
+    parser.add_argument('--ratio', '-r', type=float, default=0.5,
                         help="The ratio of validation data")
     
     args = parser.parse_args()
 
     tokenizer = Tokenizer(args)
 
-    formatted_train = loadpickle(args.input_train)
-    formatted_val = loadpickle(args.input_val)
+    formatted_train = load_pickle(args.input_train)
+    formatted_val = load_pickle(args.input_val)
 
     train_data = []
     val_data = []
@@ -88,13 +92,14 @@ if __name__ == '__main__':
 
     #validation data and test data
     for i, img in enumerate(tqdm(formatted_val)):
+        img['tokenized_captions'] = []
         if 'tokenized_captions' in img:
-            for j, caption in enumerate(img['tokenized_captions']):
-                img[i]['tokenized_captions'][j] = caption.split()
+            for caption in img['tokenized_captions']:
+                img['tokenized_captions'].append(caption.split())
         else:
             img[i]['tokenized_captions'] = []
-            for j, caption in enumerate(img['captions']):
-                img[i]['tokenized_captions'].append(tokenizer.pre_process(caption))
+            for caption in img['captions']:
+                img['tokenized_captions'].append(tokenizer.pre_process(caption))
 
     random.seed(0)
     random.shuffle(formatted_val)
@@ -108,11 +113,15 @@ if __name__ == '__main__':
     images = []
 
     word_counter = {}
-    word_ids = {}
+    word_ids = {
+            '<S>': 0,
+            '</S>': 1,
+            '<UNK>': 2,
+    }
 
     for img in tqdm(formatted_train):
         if 'tokenized_captions' in img:
-            for caption in enumerate(img['tokenized_captions']):
+            for caption in img['tokenized_captions']:
                 caption_tokens = ['<S>']
                 caption_tokens += caption.split()
                 caption_tokens.append('</S>')
@@ -145,21 +154,19 @@ if __name__ == '__main__':
             else:
                 word_counter[token] = 1
 
-    print('total distinct words:' len(word_counter))
+    print('total distinct words:', len(word_counter))
     print('top 30 frequent words:')
     sorted_word = sorted(word_counter.items(), key=lambda x: x[1], reverse=True)
-    for word, freq in sorted_word[:20]:
+    for word, freq in sorted_word[:30]:
         print('{0} - {1}'.format(word, freq))
 
-    unknown = 0
     for word, num in tqdm(word_counter.items()):
         if num > args.off:
-            word_ids[word] = {'freq':num, 'idx':len(word_ids)}
-        else:
-            unknown += 1
-    word_ids['<UNK>'] = {'freq': unknown, 'idx': len(word_ids)}
+            if word not in word_ids:
+                word_ids[word] = len(word_ids)
+            #word_ids[word] = {'freq':num, 'idx':len(word_ids)}
 
-    print('total distinct words more than {0} : {1}', args.off, len(word_ids))
+    print('total distinct words more than {0} : {1}'.format(args.off, len(word_ids)))
 
     #encoding 
     for caption in tqdm(captions):
@@ -170,3 +177,8 @@ if __name__ == '__main__':
     output_dataset['train'] = {'images': images, 'captions': captions, 'word_ids': word_ids}
     output_dataset['val'] = val_data
     output_dataset['test'] = test_data
+
+    #val and test data is not pre processed completely
+
+    output_path = os.path.join(args.out_dir, args.out_file)
+    save_pickle(output_dataset, output_path)
