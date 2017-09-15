@@ -47,8 +47,10 @@ list_img_ids = {
         k: {n: [] for n in range(1, 91) } for k in ['train', 'val', 'test']
 }
 
-def words_to_ids(tokens):
+
+def words2ids(tokens):
     return [ word_ids[token] if token in word_ids else unknown_word for token in tokens ]
+
 
 # don't add words that appear few times to the dict
 word_counter = {}
@@ -73,7 +75,7 @@ for img in tqdm(dataset_train['annotations']):
     img_id = img['image_id']
     caption = img['tokenized_caption']
     tokens = caption.split()
-    list_sentences['train'][len(tokens)].append(words_to_ids(tokens))
+    list_sentences['train'][len(tokens)].append(words2ids(tokens))
     list_img_ids['train'][len(tokens)].append(img_id)
 
 
@@ -87,10 +89,10 @@ for i, img in enumerate(tqdm(dataset_val['annotations'])):
     tokens = caption.split()
     
     if i < val_img_num:
-        list_sentences['val'][len(tokens)].append(words_to_ids(tokens))
+        list_sentences['val'][len(tokens)].append(words2ids(tokens))
         list_img_ids['val'][len(tokens)].append(img_id)
     else:
-        list_sentences['test'][len(tokens)].append(words_to_ids(tokens))
+        list_sentences['test'][len(tokens)].append(words2ids(tokens))
         list_img_ids['test'][len(tokens)].append(img_id)
 
 
