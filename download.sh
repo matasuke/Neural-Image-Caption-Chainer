@@ -23,11 +23,11 @@ return_yes_or_no(){
 
 
 echo 'Do you want to download pre-learned models(yes/no)?'
-model_download = return_yes_or_no
+model_download=return_yes_or_no
 echo 'Do you want to download images(yes/no)?'
-image_download = return_yes_or_no
+image_download=return_yes_or_no
 echo 'Do you want to download captions(yes/no)?'
-caption_download = return_yes_or_no
+caption_download=return_yes_or_no
 
 
 if [ $model_download == 'yes' ]; then
@@ -46,7 +46,7 @@ if [ $image_download == 'yes' ]; then
         mkdir --parents data/images
     fi
 
-    cd images
+    cd data/images
 
     if [ ! -d train2014 ]; then
         curl -O http://images.cocodataset.org/zips/train2014.zip

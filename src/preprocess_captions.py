@@ -84,28 +84,23 @@ if __name__ == '__main__':
     formatted_train = load_pickle(args.input_train)
     formatted_val = load_pickle(args.input_val)
 
-    train_data = []
-    val_data = []
-    test_data = []
-
     val_img_num = int(len(formatted_val) * args.ratio)
 
     #validation data and test data
-    for i, img in enumerate(tqdm(formatted_val)):
-        img['tokenized_captions'] = []
+    for img in tqdm(formatted_val):
         if 'tokenized_captions' in img:
-            for caption in img['tokenized_captions']:
-                img['tokenized_captions'].append(caption.split())
+            for i, caption in enumerate(img['tokenized_captions']):
+                img['tokenized_captions'][i] = caption.split()
         else:
-            img[i]['tokenized_captions'] = []
+            img['tokenized_captions'] = []
             for caption in img['captions']:
                 img['tokenized_captions'].append(tokenizer.pre_process(caption))
 
     random.seed(0)
     random.shuffle(formatted_val)
-    val_data.append(formatted_val[:val_img_num])
-    test_data.append(formatted_val[val_img_num:])
-    train_data.append(formatted_train)
+    val_data = formatted_val[:val_img_num]
+    test_data = formatted_val[val_img_num:]
+    train_data = formatted_train
 
     img_idx = 0
     caption_idx = 0
@@ -144,6 +139,7 @@ if __name__ == '__main__':
             images.append({'file_path': img['file_path'], 'img_idx': img_idx})
             img_idx += 1
     
+
     #create vocabrary dictonary
     for caption in tqdm(captions):
         tokens = caption['caption']
