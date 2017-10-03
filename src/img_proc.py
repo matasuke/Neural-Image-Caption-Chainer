@@ -35,3 +35,8 @@ class Img_proc(object):
             return resized.reshape(1, 3, self.img_h, self.img_w)
         else:
             return resized
+
+    def save_img:
+
+    def resize_img:
+
