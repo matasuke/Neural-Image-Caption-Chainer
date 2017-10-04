@@ -39,13 +39,13 @@ fi
 #downloading images
 
 if [ ! $image_download ]; then
-    echo -e 'Downloading MS COCO Datasets...\n'
+    echo 'Downloading MS COCO Datasets...\n'
     
-    if [ ! -d data/images ]; then
-        mkdir --parents data/images
+    if [ ! -d data/images/original ]; then
+        mkdir --parents data/images/original
     fi
 
-    cd data/images
+    cd data/images/original
 
     if [ ! -d train2014 ]; then
         curl -O http://images.cocodataset.org/zips/train2014.zip
@@ -78,31 +78,57 @@ cd ../..
 #download caption data
 
 if [ ! $caption_download ]; then
-    echo -e 'Downloading MS COCO Captions...\n'
+    echo 'Downloading MS COCO Captions...\n'
 
-    if [ ! -d data/captions ]; then
+    if [ ! -d captions ]; then
         mkdir --parents data/captions/original data/captions/converted data/captions/processed
     fi
 
-    cd data/captions/original
+    cd captions/original
 
     #download official captions
     # annotations for test data is not offered
-    curl -#O http://images.cocodataset.org/annotations/annotations_trainval2014.zip
-    unzip annotations_trainval2014.zip
-    rm annotations_trainval2014.zip
+    if [ ! -d annotations ]; then
+        curl -#O http://images.cocodataset.org/annotations/annotations_trainval2014.zip
+        unzip annotations_trainval2014.zip
+        rm annotations_trainval2014.zip
+        mv annotations mscoco_official_annotations_en
+    fi
 
 
     #download STAIR captions
-    curl -#O https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_train.json.tar.gz
-    curl -#O https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_val.json.tar.gz
+    if [ ! -d STAIR_Captions ]; then
+        mkdir STAIR_Captions
+    fi
 
-    tar xvzf STAIR-captions/stair_captions_v1.1_train.json.tar.gz
-    tar xvzf STAIR-captions/stair_captions_v1.1_val.json.tar.gz
+    cd STAIR_Captions
+
+    if [ ! -f stair_captions_v1.1_train.json ]; then
+        wget https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_train.json.tar.gz
+        tar -zxvf stair_captions_v1.1_train.json.tar.gz
+        rm stair_captions_v1.1_train.json.tar.gz
+    fi
+
+    if [ ! -f stair_captions_v1.1_val.json ]; then
+        wget https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_val.json.tar.gz
+        tar -zxvf stair_captions_v1.1_val.json.tar.gz
+        rm stair_captions_v1.1_val.json.tar.gz
+    fi
+
+    cd ..
 
 
     #download Yahoo japan captions
-    curl -#O https://github.com/yahoojapan/YJCaptions/raw/master/yjcaptions26k.zip
-    unzip yjcaptions26k
+    if [ ! -d Yahoo_captions ]; then
+        mkdir Yahoo_captions
+    fi
+
+    cd Yahoo_captions
+
+    if [ ! -f yjcaptions26k_clean.json ]; then
+        wget https://github.com/yahoojapan/YJCaptions/raw/master/yjcaptions26k.zip
+        unzip yjcaptions26k
+        rm yjcaptions26k.zip
+    fi
 
 fi
