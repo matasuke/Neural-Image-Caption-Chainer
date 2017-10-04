@@ -49,7 +49,7 @@ if [ ! $image_download ]; then
 
     if [ ! -d train2014 ]; then
         curl -O http://images.cocodataset.org/zips/train2014.zip
-        unzip -l train2014.zip
+        unzip train2014.zip
         rm train2014.zip
     fi
 
@@ -84,27 +84,25 @@ if [ ! $caption_download ]; then
         mkdir --parents data/captions/original data/captions/converted data/captions/processed
     fi
 
-    cd data/captions
+    cd data/captions/original
 
     #download official captions
     # annotations for test data is not offered
-    wget http://images.cocodataset.org/annotations/annotations_trainval2014.zip
-    unzip -l annotations_trainval2014.zip
-
+    curl -#O http://images.cocodataset.org/annotations/annotations_trainval2014.zip
+    unzip annotations_trainval2014.zip
     rm annotations_trainval2014.zip
 
+
     #download STAIR captions
-    wget https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_train.json.tar.gz
-    wget https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_val.json.tar.gz
+    curl -#O https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_train.json.tar.gz
+    curl -#O https://github.com/STAIR-Lab-CIT/STAIR-captions/raw/master/stair_captions_v1.1_val.json.tar.gz
 
     tar xvzf STAIR-captions/stair_captions_v1.1_train.json.tar.gz
     tar xvzf STAIR-captions/stair_captions_v1.1_val.json.tar.gz
 
-    rm *.tar.gz
 
     #download Yahoo japan captions
-    wget https://github.com/yahoojapan/YJCaptions/raw/master/yjcaptions26k.zip
-    unzip yjcaptions26j.zip
+    curl -#O https://github.com/yahoojapan/YJCaptions/raw/master/yjcaptions26k.zip
+    unzip yjcaptions26k
 
-    rm yjcaptions26k.zip
 fi

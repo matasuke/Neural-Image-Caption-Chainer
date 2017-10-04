@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import cv2 as cv
 
@@ -41,4 +42,4 @@ class Img_proc(object):
 
     def save_img(self, np_array, save_path):
         img = np_array.transpose(1, 2, 0)
-         
+        cv2.imwrite(save_path, img)
