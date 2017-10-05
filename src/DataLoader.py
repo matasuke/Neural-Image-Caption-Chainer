@@ -38,8 +38,7 @@ class DataLoader:
             if self.preload_features:
                 batch_images = self.img_features[[self.cap2img[i] for i in batch_caption_indices ]]
             else:
-                pass
-                #batch_images = np.array([ np,load('{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(self.images[self.cap2img[i]]['file_path'])[0] )))['arr_0'] for i in batch_caption_indices ])
+                batch_images = np.array([ np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(self.images[self.cap2img[i]]['file_path'])[0] )))['arr_0'] for i in batch_caption_indices ])
         
         if self.raw_captions:
             batch_word_indices = [ self.captions[i]['caption'] for i in batch_caption_indices ]
@@ -63,5 +62,5 @@ if __name__ == "__main__":
     batch_images, batch_word_indices = dataset.get_batch(10, raw_img=True)
     
     for img, words in zip(batch_images, batch_word_indices):
-        print(img)
-        print(words)
+        print('img:', img)
+        print('words', words)
