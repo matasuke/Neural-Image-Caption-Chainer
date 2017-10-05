@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import cv2 as cv
+import cv2
 
 
 class Img_proc(object):
@@ -24,11 +24,12 @@ class Img_proc(object):
             self.mean = mean
 
     def load_img(self, img_path, img_h = 224, img_w = 224, resize = True, expand_dim = True):
-        img = cv2.imread(img_path)
+        img = cv2.imread(img_path).astype(np.float32)
 
         if resize:
             size = (img_h, img_w)
-            img = cv2.resize(img, size).transpose(2, 0, 1)
+            img = cv2.resize(img, size)
+            img = img.transpose(2, 0, 1)
         else:
             size = (img.shape[0], img.shape[1])
             img = img.transpose(2, 0, 1)
@@ -36,7 +37,7 @@ class Img_proc(object):
         img -= self.mean
 
         if expand_dim:
-            return img = np.expand_dims(img, axis=0)
+            img = np.expand_dims(img, axis=0)
 
         return img
 

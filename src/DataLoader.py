@@ -12,7 +12,7 @@ class DataLoader:
         self.caption_num = len(self.captions)
         self.images = dataset['images']
         self.cap2img = { caption['caption_idx']:caption['img_idx'] for caption in dataset['captions'] }
-        self.img_feature_root = os.path.join(img_feature_foot, '')
+        self.img_feature_root = img_feature_root
         self.img_root = os.path.join(img_root, '')
         self.random_indices = np.random.permutation(len(self.captions))
         self.index_counter = 0
@@ -22,7 +22,7 @@ class DataLoader:
         # you have to extract features using resnet, alexnet and so on first.
         self.preload_features = preload_features
         if self.preload_features:
-            self.img_features = np.array([np.load( '{0}{1}.npz'.format(self.img_feature_root, os.path.splitext(image['file_path'])[0]))['arr_0'] for image in self.images ])
+            self.img_features = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.images ])
 
     def get_batch(self, batch_size=248, raw_img = True):
         batch_caption_indices = self.random_indices[self.index_counter: self.index_counter + batch_size]
@@ -38,8 +38,9 @@ class DataLoader:
             if self.preload_features:
                 batch_images = self.img_features[[self.cap2img[i] for i in batch_caption_indices ]]
             else:
-                batch_images = np.array([ np,load('{0}{1}.npz'.format(self.img_feature_root, os.path.splitext(self.images[self.cap2img[i]['file_path']])[0] ))['arr_0'] for i in batch_caption_indices])
-
+                pass
+                #batch_images = np.array([ np,load('{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(self.images[self.cap2img[i]]['file_path'])[0] )))['arr_0'] for i in batch_caption_indices ])
+        
         if self.raw_captions:
             batch_word_indices = [ self.captions[i]['caption'] for i in batch_caption_indices ]
         else:
@@ -54,13 +55,13 @@ class DataLoader:
 if __name__ == "__main__":
     import json
     import pickle
-    with open('../data/captions/original/dataset.pkl', 'br') as f:
+    with open('../data/captions/processed/dataset_STAIR_jp.pkl', 'br') as f:
         data = pickle.load(f)
 
     train_data = data['train']
-    dataset = DataLoader(train_data, img_feature_root='', img_root="../data/images/train2014", img_mean="imagenet")
+    dataset = DataLoader(train_data, img_feature_root='', img_root="../data/images/original/", img_mean="imagenet")
     batch_images, batch_word_indices = dataset.get_batch(10, raw_img=True)
     
-    for img, words in zip(batc_images, batch_word_indices):
+    for img, words in zip(batch_images, batch_word_indices):
         print(img)
         print(words)
