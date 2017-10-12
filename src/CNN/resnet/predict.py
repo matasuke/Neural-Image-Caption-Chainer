@@ -9,4 +9,6 @@ from img_proc import Img_proc
 from ResNet50 import ResNet
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--img', '-i', )
+
 
