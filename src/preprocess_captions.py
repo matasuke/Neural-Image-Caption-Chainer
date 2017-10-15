@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser.add_argument('--out_dir', '-od', type=str, default="../data/captions/processed",
                         help="output dir"
     )
-    parser.add_argument('--out_file', '-of', type=str, default="dataset.pkl",
+    parser.add_argument('--out_file', '-of', type=str, default="dataset_STAIR_jp.pkl",
                         help="output file name"
     )
     parser.add_argument('--lang', '-l', type=str, choices=['jp', 'cn', 'en', 'ch'], default="jp",
