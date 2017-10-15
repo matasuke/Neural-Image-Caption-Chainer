@@ -55,19 +55,19 @@ if [ ! $image_download ]; then
 
     if [ ! -d val2014 ]; then
         curl -O http://images.cocodataset.org/zips/val2014.zip
-        unzip -l val2014.zip
+        unzip val2014.zip
         rm val2014.zip
     fi
 
     if [ ! -d test2014 ]; then
         curl -O http://images.cocodataset.org/zips/test2014.zip
-        unzip -l test2014.zip
+        unzip test2014.zip
         rm test2014.zip
     fi
 
     if [ ! -d test2015 ]; then
         curl -O http://images.cocodataset.org/zips/test2015.zip
-        unzip -l test2015.zip
+        unzip test2015.zip
         rm test2015.zip
     fi
 fi
