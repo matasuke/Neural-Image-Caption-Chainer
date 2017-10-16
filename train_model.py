@@ -13,7 +13,7 @@ from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu', '-g', default=-1, type=int, 
+parser.add_argument('--gpu', '-g', default=0, type=int, 
                     help="set GPU ID(if use CPU, set as -1)")
 parser.add_argument('--savedir', default="./data/train_data/STAIR", type=str,
                     help="directory to save models and log")
@@ -28,15 +28,17 @@ parser.add_argument('--dataset', '-d', default="./data/captions/processed/datase
                     help="path to dataset file")
 parser.add_argument('--img_feature_root', '-f', default="./data/images/features/ResnNet50/", type=str,
                     help="path to CNN feature")
-parser.add_argument('--filename_img_id', '-id', default='./data/images/original', type=bool,
+parser.add_argument('--filename_img_id', '-id', default='./data/images/original/', type=str,
                     help="image id is filename")
+#parser.add_argument('--filename_img_id', '-id', default='./data/images/original/', type=str,
+#                    help="image id is filename")
 parser.add_argument('--preload', default=False, type=bool,
                     help="preload all image features onto RAM")
 parser.add_argument('--epoch', default=10, type=int,
                     help="the number of epoch")
 parser.add_argument('--batch', '-b', default=128, type=int,
                     help="mini batch size")
-parser.add_argument('--hidden', '-h', default=512, type=int,
+parser.add_argument('--hidden', '-hd', default=512, type=int, 
                     help="the number of hidden size in LSTM")
 args = parser.parse_args()
 
@@ -65,7 +67,7 @@ with open(args.dataset, 'rb') as f:
 train_data = data['train']
 
 #prepare words ids
-token2index = train_data['word_idx']
+token2index = train_data['word_ids']
 
 dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.filename_img_id)
 
