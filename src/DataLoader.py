@@ -4,7 +4,7 @@ from img_proc import Img_proc
 
 
 class DataLoader:
-    def __init__(self, dataset, img_feature_root="../data/images/features/ResNet50_features/", img_root='../data/images/train2014/', img_mean="imagenet", raw_captions=False, preload_features=False):
+    def __init__(self, dataset, img_feature_root="../data/images/features/ResNet50/", img_root='../data/images/original/', img_mean="imagenet", raw_captions=False, preload_features=False):
         self.raw_captions = False
         self.preload_features = False
         self.img_proc = Img_proc(mean_type=img_mean)
@@ -23,7 +23,7 @@ class DataLoader:
         self.preload_features = preload_features
         if self.preload_features:
             self.img_features = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.images ])
-
+   
     def get_batch(self, batch_size=248, raw_img = True):
         batch_caption_indices = self.random_indices[self.index_counter: self.index_counter + batch_size]
         self.index_counter += batch_size
@@ -57,21 +57,20 @@ if __name__ == "__main__":
         data = pickle.load(f)
 
     train_data = data['train']
-    dataset = DataLoader(train_data, img_feature_root='', img_root="../data/images/original/", img_mean="imagenet")
+    dataset = DataLoader(train_data, img_feature_root='../data/images/features/ResNet50/', img_root="../data/images/original/")
     batch_images, batch_word_indices = dataset.get_batch(10, raw_img=True)
     
     for img, words in zip(batch_images, batch_word_indices):
         print('img:', img)
         print('words', words)
 
-    
-    batch_images, batch_word_indices = dataset._get_batch(10)
+    batch_images, batch_word_indices = dataset.get_batch(10)
     
     for ing, words in zip(batch_images, batch_word_indices):
         print('img:', img)
         print('words', words)
-
-    dataset = DataLoader(train_data, img_feature_root='../data/images/features/train2014', preload_all_features=True)
+    
+    dataset = DataLoader(train_data, img_feature_root='../data/images/features/ResNet50/', preload_features=True)
     batch_images, batch_word_indices = dataset.get_batch(10)
     for ing, words in zip(batch_images, batch_word_indices):
         print('img:', img)
