@@ -52,7 +52,6 @@ class DataLoader:
 
 
 if __name__ == "__main__":
-    import json
     import pickle
     with open('../data/captions/processed/dataset_STAIR_jp.pkl', 'br') as f:
         data = pickle.load(f)
@@ -62,5 +61,18 @@ if __name__ == "__main__":
     batch_images, batch_word_indices = dataset.get_batch(10, raw_img=True)
     
     for img, words in zip(batch_images, batch_word_indices):
+        print('img:', img)
+        print('words', words)
+
+    
+    batch_images, batch_word_indices = dataset._get_batch(10)
+    
+    for ing, words in zip(batch_images, batch_word_indices):
+        print('img:', img)
+        print('words', words)
+
+    dataset = DataLoader(train_data, img_feature_root='../data/images/features/train2014', preload_all_features=True)
+    batch_images, batch_word_indices = dataset.get_batch(10)
+    for ing, words in zip(batch_images, batch_word_indices):
         print('img:', img)
         print('words', words)
