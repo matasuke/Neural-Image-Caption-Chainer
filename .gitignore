@@ -7,5 +7,6 @@
 *.jpeg
 *.mat
 *.npz
+*.model
 .python-version
 __pycache__
