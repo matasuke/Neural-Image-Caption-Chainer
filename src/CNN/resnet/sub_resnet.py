@@ -9,14 +9,14 @@ class BottleNeckA(chainer.Chain):
     def __init__(self, in_size, ch, out_size, stride=2):
         initW = initializers.HeNormal()
         super(BottleNeckA, self).__init__(
-                conv1 = L.Convolution2D(in_size, ch, 1, stride, 0, initW, nobias=True),
+                conv1 = L.Convolution2D(in_size, ch, 1, stride, 0, initialW=initW, nobias=True),
                 bn1 = L.BatchNormalization(ch),
-                conv2 = L.Convolution2D(ch, ch, 3, 1, 1, initW, nobias=True),
+                conv2 = L.Convolution2D(ch, ch, 3, 1, 1, initialW=initW, nobias=True),
                 bn2=L.BatchNormalization(ch),
-                conv3=L.Convolution2D(ch, out_size, 1, 1, 0, initW, nobias=True),
+                conv3=L.Convolution2D(ch, out_size, 1, 1, 0, initialW=initW, nobias=True),
                 bn3=L.BatchNormalization(out_size),
                 
-                conv4=L.Convolution2D(in_size, out_size, 1, stride, 0, initW, nobias=True),
+                conv4=L.Convolution2D(in_size, out_size, 1, stride, 0, initialW=initW, nobias=True),
                 bn4=L.BatchNormalization(out_size),
             )
 
@@ -33,11 +33,11 @@ class BottleNeckB(chainer.Chain):
     def __init__(self, in_size, ch):
         initW = initializers.HeNormal()
         super(BottleNeckB, self).__init__(
-                conv1 = L.Convolution2D(in_size, ch, 1, 1, 0, initW, nobias=True),
+                conv1 = L.Convolution2D(in_size, ch, 1, 1, 0, initialW=initW, nobias=True),
                 bn1 = L.BatchNormalization(ch),
-                conv2=L.Convolution2D(ch, ch, 3, 1, 1, initW, nobias=True),
+                conv2=L.Convolution2D(ch, ch, 3, 1, 1, initialW=initW, nobias=True),
                 bn2=L.BatchNormalization(ch),
-                conv3=L.Convolution2D(ch, in_size, 1, 1, 0, initW, nobias=True),
+                conv3=L.Convolution2D(ch, in_size, 1, 1, 0, initialW=initW, nobias=True),
                 bn3=L.BatchNormalization(in_size),
             )
 
@@ -50,17 +50,20 @@ class BottleNeckB(chainer.Chain):
     
 
 class Block(chainer.Chain):
-    
     def __init__(self, layer, in_size, ch, out_size, stride=2):
         super(Block, self).__init__()
         links = [('a', BottleNeckA(in_size, ch, out_size, stride))]
-        for i in range(1, layer):
-            self.add_link('b{}'.format(i), BottleNeckB(out_size, ch))
-        self.layer = layer
+        for i in range(layer-1):
+            links += [('b{}'.format(i+1), BottleNeckB(out_size, ch))]
 
-    def __call__(self, x):
-        h = self.a(x)
-        for i in range(1, self.layer):
-            h = self['b{}'.format(i)](h)
+        for l in links:
+            self.add_link(*l)
+        self.forward = links
 
-        return h
+    def __call__(self, x, train):
+        for name, _ in self.forward:
+            f = getattr(self, name)
+            x = f(x, train)
+
+        return x
+

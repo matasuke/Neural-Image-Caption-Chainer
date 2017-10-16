@@ -8,3 +8,4 @@
 *.mat
 *.npz
 .python-version
+__pycache__
