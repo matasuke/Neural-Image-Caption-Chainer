@@ -6,7 +6,7 @@ import pickle
 import chainer
 import chainer.functions as F
 from chainer import cuda
-from chainer import Function, FunctionSet, Variable, optimizers, serializers
+from chainer import Function, Variable, optimizers, serializers
 
 sys.path.append('./src')
 from Image2CaptionDecoder import Image2CaptionDecoder
