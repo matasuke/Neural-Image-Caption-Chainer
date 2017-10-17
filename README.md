@@ -15,11 +15,20 @@
 2. this function split datasets and save them for easy usage. also tokenize them.
 `python preprocess_captions.py`
 
+### Language Availability
+
+### generate captions using prepared model
+
+### train MSCOCO data
+
+### train your own data
+
+
 ## Next to do
-- [] prepare multi language processer.
-- [] prepare datas of multi languages.
-- [] use google cloud platform api for machine translation
-- [] prepare environments for experiment of generating captions
-- [] fix codes for chainer v3
-- [] implement caption model using Bokete(create humor caption model)
-- [] implement web api
+-  prepare multi language processer.
+-  prepare datas of multi languages.
+-  use google cloud platform api for machine translation
+-  prepare environments for experiment of generating captions
+-  fix codes for chainer v3
+-  implement caption model using Bokete(create humor caption model)
+-  implement web api
