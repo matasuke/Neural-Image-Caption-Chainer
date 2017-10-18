@@ -95,7 +95,7 @@ iteration = 1
 
 while(dataset.epoch <= args.epoch):
     optimizer.zero_grads()
-    #optimizer.cleargrads()
+    #model.zerograds()
     current_epoch = dataset.epoch
     img_feature, x_batch = dataset.get_batch(batch_size)
     

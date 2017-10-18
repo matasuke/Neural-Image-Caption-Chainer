@@ -9,8 +9,9 @@ class DataLoader:
         self.preload_features = False
         self.img_proc = Img_proc(mean_type=img_mean)
         self.captions = dataset['captions']
-        self.caption_num = len(self.captions)
+        self.num_captions = len(self.captions)
         self.images = dataset['images']
+        self.num_images = len(self.images)
         self.cap2img = { caption['caption_idx']:caption['img_idx'] for caption in dataset['captions'] }
         self.img_feature_root = img_feature_root
         self.img_root = os.path.join(img_root, '')
@@ -50,6 +51,17 @@ class DataLoader:
     def shuffle_data(self):
         self.random_indices = np.random.permutation(len(self.captions))
 
+    @property
+    def get_caption_size(self):
+        return self.num_captions
+
+    @property
+    def get_image_size(self):
+        return self.num_images
+
+    @property
+    def is_new_epoch(self):
+        return 
 
 if __name__ == "__main__":
     import pickle
