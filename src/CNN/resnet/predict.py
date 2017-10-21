@@ -9,11 +9,11 @@ from ResNet50 import ResNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--img', '-i', type=str, default="../../../sample_imgs/sample_img1.jpg", 
-			help="image you want to predict")
+                    help="image you want to predict")
 parser.add_argument('--model', '-m', type=str, default="../../../data/models/cnn/ResNet50.model",
-			help="model path you want to use")
+                    help="model path you want to use")
 parser.add_argument('--gpu', '-g', type=int, default=-1,
-			help="GPU ID(put -1 if you don't use gpu)")
+                    help="GPU ID(put -1 if you don't use gpu)")
 args = parser.parse_args()
 
 #prepare img processer
