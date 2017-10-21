@@ -23,7 +23,7 @@ parser.add_argument('--img_root', '-i', type=str, default="./data/images/origina
                     help="Path to image files root")
 parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/STAIR",
                     help="The directory to save model and log")
-parser.add_argument('--preload', '-p', type=bool, default=False,
+parser.add_argument('--preload', '-p', type=bool, default=True,
                     help="preload all image features onto RAM before trainig")
 parser.add_argument('--epoch', type=int, default=10, 
                     help="The number of epoch")
@@ -94,7 +94,9 @@ total_epoch = args.epoch
 batch_size = args.batch_size
 caption_size = dataset.caption_size
 total_iteration = math.ceil(caption_size / batch_size)
+#total_iteration = caption_size // batch_size
 img_size = dataset.img_size
+hidden_dim = args.hidden_dim
 num_layers = args.n_layers
 sum_loss = 0
 iteration = 0
@@ -105,6 +107,7 @@ print('Total images: ', img_size)
 print('Total captions:', caption_size)
 print('total epoch: ', total_epoch)
 print('batch_size:', batch_size)
+print('The number of hidden dim:', hidden_dim)
 print('The number of LSTM layers:', num_layers)
 print('optimizer:', opt)
 #print('Lerning rate: ', lerning_rate)
@@ -124,6 +127,8 @@ while dataset.now_epoch <= total_epoch:
     if args.gpu >= 0:
         img_batch = cuda.to_gpu(img_batch, device=args.gpu)
         cap_batch = [ cuda.to_gpu(x, device=args.gpu) for x in cap_batch]
+        print(np.shape(img_batch))
+        print(np.shape(cap_batch))
 
     #lstml inputs
     hx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
@@ -141,7 +146,7 @@ while dataset.now_epoch <= total_epoch:
     
     print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 5)))
     if now_epoch is not dataset.now_epoch:
-        
+        print('new epoch phase')
         mean_loss = sum_loss / caption_size
 
         print('\nepoch {0} result/n', now_epoch-1)

@@ -2,6 +2,7 @@ from DataLoader import DataLoader
 import argparse
 import pickle
 import numpy as np
+from chainer import cuda
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', '-d', type=str, default="../data/captions/processed/dataset_STAIR_jp.pkl",
@@ -31,13 +32,33 @@ dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload
 
 batch_size = args.batch_size
 
-for i in range(0, args.epoch):
-    img_batch, cap_batch = dataset.get_batch(batch_size, raw_img=False)
+cuda.get_device_from_id(0).use()
 
+iteration = 0
+
+while dataset.now_epoch <= args.epoch:
+    
+    now_epoch = dataset.now_epoch
+    img_batch, cap_batch = dataset.get_batch(batch_size)
+    
+    img_batch = cuda.to_gpu(img_batch, device=0)
+    cap_batch = [ cuda.to_gpu(x, device=0) for x in cap_batch]
+    
+    if dataset.now_epoch < 3:
+        print(np.shape(img_batch))
+        print(np.shape(cap_batch))
+
+    iteration += 1
+
+    if now_epoch is not dataset.now_epoch:
+        print('new epoch')
+        iteration = 0
+
+'''
     for img, words in zip(img_batch, cap_batch):
         print('img', img)
         print('words', words)
-
+'''
 '''
     print(np.shape(img_batch))
     print(np.shape(cap_batch))

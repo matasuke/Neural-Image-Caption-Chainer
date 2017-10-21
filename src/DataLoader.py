@@ -19,19 +19,18 @@ class DataLoader:
         self.index_counter = 0
         self.epoch = 1
         self.raw_captions = raw_captions
-        # this option is used when you want your model to learn generating captions without inputting acutual images. 
-        # you have to extract features using resnet, alexnet and so on first.
         self.preload_features = preload_features
         if self.preload_features:
             self.img_features = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.images ])
    
-    def get_batch(self, batch_size=248, raw_img = True):
+    def get_batch(self, batch_size=248, raw_img = False):
         batch_caption_indices = self.random_indices[self.index_counter: self.index_counter + batch_size]
         self.index_counter += batch_size
-        if self.index_counter > len(self.captions):
+        
+        if self.index_counter > self.num_captions:
             self.epoch += 1
             self.shuffle_data()
-            self.index_count = 0
+            self.index_counter = 0
 
         if raw_img:
             batch_images = np.array([ self.img_proc.load_img(os.path.join(self.img_root, self.images[self.cap2img[i]]['file_path']), expand_dim = False) for i in batch_caption_indices ])
