@@ -26,9 +26,7 @@
 
 ## Next to do
 -  prepare multi language processer.
--  prepare datas of multi languages.
--  use google cloud platform api for machine translation
+-  prepare datas of multi languages using google cloud platfor api.
 -  prepare environments for experiment of generating captions
--  fix codes for chainer v3
 -  implement caption model using Bokete(create humor caption model)
 -  implement web api
