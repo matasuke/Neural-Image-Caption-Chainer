@@ -23,7 +23,7 @@ class Image2CaptionDecoder(chainer.Chain):
 
     def __call__(self, hx, cx, caption_batch):
         xs = [self.embed_word(caption) for caption in caption_batch]
-        hy, cy, ys = self.lstm(hx, cx, xs, train=self.train)
+        hy, cy, ys = self.lstm(hx, cx, xs)
         predicted_caption_batch = [self.decode_word(generated_caption) for generated_caption in ys]
         if self.train:
             loss=0
@@ -43,4 +43,7 @@ if __name__ == '__main__':
     hx = np.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=np.float32)
     cx = np.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=np.float32)
     hx, cx = model.input_cnn_feature(hx, cx, img_feature)
-    loss = model(hx, cx, x_batch)
+    
+    with chainer.using_config('train', False):
+        loss = model(hx, cx, x_batch)
+        print(loss)
