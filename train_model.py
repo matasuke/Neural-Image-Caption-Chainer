@@ -1,132 +1,160 @@
 import sys
 import os
+import math
 import argparse
 import numpy as np
 import pickle
 import chainer
-import chainer.functions as F
 from chainer import cuda
-from chainer import Function, Variable, optimizers, serializers
+from chainer.cuda import cupy as cp
+from chainer import optimizers, serializers
 
 sys.path.append('./src')
 from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu', '-g', default=0, type=int, 
-                    help="set GPU ID(if use CPU, set as -1)")
-parser.add_argument('--savedir', default="./data/train_data/STAIR", type=str,
-                    help="directory to save models and log")
-
-'''
-parser.add_argument('--vocab', '-v', default="./data/captions/processed/dataset_STAIR_jp.pkl", type=str,
-                    help="path to the vocabrary path")
-parser.add_argument('--captions', default="./data/captions/processed/dataset_STAIR_jp.pkl", type=str,
-                    help="path to preprocessed caption pkl file")
-'''
-parser.add_argument('--dataset', '-d', default="./data/captions/processed/dataset.pkl", type=str,
-                    help="path to dataset file")
-parser.add_argument('--img_feature_root', '-f', default="./data/images/features/ResnNet50/", type=str,
-                    help="path to CNN feature")
-parser.add_argument('--filename_img_id', '-id', default='./data/images/original/', type=str,
-                    help="image id is filename")
-#parser.add_argument('--filename_img_id', '-id', default='./data/images/original/', type=str,
-#                    help="image id is filename")
-parser.add_argument('--preload', default=False, type=bool,
-                    help="preload all image features onto RAM")
-parser.add_argument('--epoch', default=10, type=int,
-                    help="the number of epoch")
-parser.add_argument('--batch', '-b', default=128, type=int,
-                    help="mini batch size")
-parser.add_argument('--hidden', '-hd', default=512, type=int, 
-                    help="the number of hidden size in LSTM")
+parser.add_argument('--gpu', '-g', type=int, default=0,
+                    help="set GPU ID (negative value means using CPU)")
+parser.add_argument('--dataset', '-d', type=str, default="./data/captions/processed/dataset_STAIR_jp.pkl",
+                    help="Path to preprocessed caption pkl file")
+parser.add_argument('--img_feature_root', '-f', type=str, default="./data/images/features/ResNet50/")
+parser.add_argument('--img_root', '-i', type=str, default="./data/images/original/",
+                    help="Path to image files root")
+parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/STAIR",
+                    help="The directory to save model and log")
+parser.add_argument('--preload', '-p', type=bool, default=True,
+                    help="preload all image features onto RAM before trainig")
+parser.add_argument('--epoch', type=int, default=10, 
+                    help="The number of epoch")
+parser.add_argument('--batch_size', type=int, default=256,
+                    help="Mini batch size")
+parser.add_argument('--hidden_dim', '-hd', type=int, default=512,
+                    help="The number of hiden dim size in LSTM")
+parser.add_argument('--img_feature_dim', '-fd', type=int, default=2048,
+                    help="The number of image feature dim as input to LSTM")
+parser.add_argument('--optimizer', '-opt', type=str, default="Adam", choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'SGD', 'RMSprop'],
+                    help="Type of iptimizers")
+parser.add_argument('--dropout_ratio', '-do', type=float, default=0.5,
+                    help="Dropout ratio")
+parser.add_argument('--n_layers', '-nl', type=int, default=1,
+                    help="The number of layers")
 args = parser.parse_args()
 
-#save dir
-if not os.path.isdir(args.savedir):
-    os.makedirs(args.savedir)
-    os.makedi(os.path.join(args.savedir, 'models'))
-    os.makedi(os.path.join(args.savedir, 'optimizers'))
-    os.makedi(os.path.join(args.savedir, 'logs'))
-    print("make the save directory", args.savedir)
+#create save directories
+if not os.path.isdir(args.output_dir):
+    os.makedirs(args.output_dir)
+    os.mkdir(os.path.join(args.output_dir, 'models'))
+    os.mkdir(os.path.join(args.output_dir, 'optimizers'))
+    os.mkdir(os.path.join(args.output_dir, 'logs'))
+    print('making some directories to ', args.output_dir)
 
-#prepare GPU
-if args.gpu >= 0:
-    xp = cuda.cupy
-    cuda.get_device(args.gpu).use()
-else:
-    xp=np
 
-#prepare data
-#these lines have to be fixed
-print('loading preprocessed trainig data...')
+#data preparation
+print('loading preprocessed data...')
 
 with open(args.dataset, 'rb') as f:
     data = pickle.load(f)
 
 train_data = data['train']
+val_data = data['val']
+test_data = data['test']
 
-#prepare words ids
+#word dictionary
 token2index = train_data['word_ids']
 
-dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.filename_img_id)
+dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.img_root)
 
 #model preparation
-print('preparing caption generation models and trainig process')
-model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden)
+model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
 
-#gpu processing
+#cupy settings
 if args.gpu >= 0:
+    xp = cp
+    cuda.get_device_from_id(args.gpu).use()
     model.to_gpu()
+else:
+    xp = np
 
+opt = args.optimizer
+'''
+if opt == 'SGD':
+    optimizer = optimizers.SGD()
+elif opt == 'AdaDelta':
+    optimizer = optimizers.AdaDelta()
+elif opt == 'Adam':
+    optimizer = optimizers.Adam()
+'''
 #optimizers
 optimizer = optimizers.Adam()
 optimizer.setup(model)
 
-# setting for training
-batch_size = args.batch
-grad_clip = 1.0
-num_train_data = len(train_data)
+# configuration about training
+total_epoch = args.epoch
+batch_size = args.batch_size
+caption_size = dataset.caption_size
+total_iteration = math.ceil(caption_size / batch_size)
+#total_iteration = caption_size // batch_size
+img_size = dataset.img_size
+hidden_dim = args.hidden_dim
+num_layers = args.n_layers
+sum_loss = 0
+iteration = 0
+
+# before training
+print('-----configurations-----')
+print('Total images: ', img_size)
+print('Total captions:', caption_size)
+print('total epoch: ', total_epoch)
+print('batch_size:', batch_size)
+print('The number of hidden dim:', hidden_dim)
+print('The number of LSTM layers:', num_layers)
+print('optimizer:', opt)
+#print('Lerning rate: ', lerning_rate)
+
 
 #start training
-sum_loss = 0
-print('Training start')
-iteration = 1
 
-while(dataset.epoch <= args.epoch):
-    optimizer.zero_grads()
-    #model.zerograds()
-    current_epoch = dataset.epoch
-    img_feature, x_batch = dataset.get_batch(batch_size)
+print('\nepoch 1')
+
+while dataset.now_epoch <= total_epoch:
+    
+    model.cleargrads()
+    
+    now_epoch = dataset.now_epoch
+    img_batch, cap_batch = dataset.get_batch(batch_size)
     
     if args.gpu >= 0:
-        img_feature = cuda.to_gpu(img_feature, device=args.gpu)
-        x_batch = [ cuda.to_gpu(x, device=args.gpu) for x in x_batch ]
-    
-    hx = xp.zeros((model.n_layers, len(x_batch), model.hidden_dim), dtype=xp.float32)
-    cx = xp.zeros((model.n_layers, len(x_batch), model.hidden_dim), dtype=xp.float32)
-    hx, cx = model.input_cnn_feature(hx, cx, img_feature)
-    loss = model(hx, cx, x_batch)
+        img_batch = cuda.to_gpu(img_batch, device=args.gpu)
+        cap_batch = [ cuda.to_gpu(x, device=args.gpu) for x in cap_batch]
 
-    print(loss.data)
-    with open(os.path.join(args.savedir, 'logs', 'loss.txt'), "a") as f:
-        f.write(str(loss.data) + '\n')
+    #lstml inputs
+    hx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
+    cx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
+
+    loss = model(hx, cx, cap_batch)
 
     loss.backward()
-    loss.unchain_backward()
-    optimizer.clip_grads(grad_clip)
+    
+    #update parameters
     optimizer.update()
 
     sum_loss += loss.data * batch_size
     iteration += 1
+    
+    print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 5)))
+    if now_epoch is not dataset.now_epoch:
+        print('new epoch phase')
+        mean_loss = sum_loss / caption_size
 
-    if dataset.epoch - current_epoch > 0 or iteration > 10000:
-        print('epoch:', dataset.epoch)
-        serializers.save_hdf5(os.path.join(args.savedir, 'models', '/caption_model' + current_epoch + '.model'), model)
-        serializers.save_hdf5(os.path.join(args.savedir, 'optimizers', 'optimizer' + current_epoch + '.model'), optimizer)
+        print('\nepoch {0} result/n', now_epoch-1)
+        print('epoch: {0} iteration: {1}, loss: {2:.5f}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(mean_loss), 5)))
+        print('\nepoch ', now_epoch)
 
-        mean_loss = sum_loss / num_train_data
-        with open(os.path.join(args.savedir, 'logs', 'mean_loss.txt'),'a') as f:
+        serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)
+        serializers.save_hdf5(os.path.join(args.output_dir, 'optimizers', 'optimizer' + str(now_epoch) + '.model'), optimizer)
+        
+        with open(os.path.join(args.output_dir, 'logs', 'mean_loss.txt'), 'a') as f:
             f.write(str(mean_loss) + '\n')
-        sum_loss= 0
+        sum_loss = 0
         iteration = 0
