@@ -33,7 +33,7 @@ parser.add_argument('--hidden_dim', '-hd', type=int, default=512,
                     help="The number of hiden dim size in LSTM")
 parser.add_argument('--img_feature_dim', '-fd', type=int, default=2048,
                     help="The number of image feature dim as input to LSTM")
-parser.add_argument('--optimizer', '-opt', type=str, default="Adam", choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'SGD', 'RMSprop']
+parser.add_argument('--optimizer', '-opt', type=str, default="Adam", choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'SGD', 'RMSprop'],
                     help="T")
 parser.add_argument('--dropout_ratio', '-do', type=float, default=0.5,
                     help="Dropout ratio")
