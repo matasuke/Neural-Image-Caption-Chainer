@@ -18,7 +18,7 @@ class Image2CaptionDecoder(chainer.Chain):
     def input_cnn_feature(self, hx, cx, img_feature):
         h = self.embed_img(img_feature)
         h = [F.reshape(img_embedding, (1, self.hidden_dim)) for img_embedding in h]
-        hy, cy, ys = self.lstm(hx, cx, h, train=self.train)
+        hy, cy, ys = self.lstm(hx, cx, h)
         return hy, cy
 
     def __call__(self, hx, cx, caption_batch):
