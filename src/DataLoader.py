@@ -24,7 +24,6 @@ class DataLoader:
             self.img_features = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.images ])
    
     def get_batch(self, batch_size=248, raw_img = False):
-        print(self.index_counter, ' - ', self.index_counter + batch_size)
         batch_caption_indices = self.random_indices[self.index_counter: self.index_counter + batch_size]
         self.index_counter += batch_size
         

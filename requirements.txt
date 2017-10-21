@@ -1,6 +1,8 @@
-chainer==1.19.0
+chainer==3.0.0
 click==6.7
+cupy==2.0.0
 cycler==0.10.0
+fastrlock==0.3
 filelock==2.0.12
 Flask==0.12.2
 h5py==2.7.1

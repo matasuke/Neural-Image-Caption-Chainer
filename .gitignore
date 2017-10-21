@@ -105,8 +105,8 @@ ENV/
 *.npy
 
 # chainer
-.model
-.mat
+*.model
+*.mat
 
 # pictures
 *.png
@@ -120,3 +120,6 @@ ENV/
 
 #json
 *.json
+
+#txt
+*.txt
