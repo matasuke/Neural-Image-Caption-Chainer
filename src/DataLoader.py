@@ -52,19 +52,15 @@ class DataLoader:
         self.random_indices = np.random.permutation(len(self.captions))
 
     @property
-    def get_caption_size(self):
+    def caption_size(self):
         return self.num_captions
 
     @property
-    def get_img_size(self):
+    def img_size(self):
         return self.num_images
 
     @property
-    def get_num_layers(self):
-        return self.n_layers
-
-    @property
-    def get_now_epoch(self):
+    def now_epoch(self):
         return self.epoch
 
     @property
@@ -89,7 +85,7 @@ if __name__ == "__main__":
     for ing, words in zip(batch_images, batch_word_indices):
         print('img:', img)
         print('words', words)
-    
+
     dataset = DataLoader(train_data, img_feature_root='../data/images/features/ResNet50/', preload_features=True)
     batch_images, batch_word_indices = dataset.get_batch(10)
     for ing, words in zip(batch_images, batch_word_indices):

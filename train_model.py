@@ -14,7 +14,7 @@ from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu', '-g', type=int, default=1,
+parser.add_argument('--gpu', '-g', type=int, default=0,
                     help="set GPU ID (negative value means using CPU)")
 parser.add_argument('--dataset', '-d', type=str, default="./data/captions/processed/dataset_STAIR_jp.pkl",
                     help="Path to preprocessed caption pkl file")
@@ -37,14 +37,16 @@ parser.add_argument('--optimizer', '-opt', type=str, default="Adam", choices=['A
                     help="T")
 parser.add_argument('--dropout_ratio', '-do', type=float, default=0.5,
                     help="Dropout ratio")
+parser.add_argument('--n_layers', '-nl', type=int, default=1,
+                    help="The number of layers")
 args = parser.parse_args()
 
 #create save directories
 if not os.path.isdir(args.output_dir):
     os.makedirs(args.output_dir)
-    os.makedir(os.path.join(args.output_dir, 'models'))
-    os.makedir(os.path.join(args.output_dir, 'optimizers'))
-    os.makedir(os.path.join(args.output_dir, 'logs'))
+    os.mkdir(os.path.join(args.output_dir, 'models'))
+    os.mkdir(os.path.join(args.output_dir, 'optimizers'))
+    os.mkdir(os.path.join(args.output_dir, 'logs'))
     print('making some directories to ', args.output_dir)
 
 
@@ -64,7 +66,7 @@ token2index = train_data['word_ids']
 dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.img_root)
 
 #model preparation
-model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio)
+model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
 
 #cupy settings
 if args.gpu:
@@ -90,11 +92,12 @@ optimizer.setup(model)
 # configuration about training
 total_epoch = args.epoch
 batch_size = args.batch
-data_size, caption_size = dataset.get_caption_size()
-img_size = dataset.get_img_size()
-num_layers = dataset.get_num_layers()
+total_iteration = total_epoch / batch_size
+caption_size = dataset.caption_size
+img_size = dataset.img_size
+num_layers = args.n_layers
 sum_loss = 0
-iteration = 1
+iteration = 0
 
 # before training
 print('-----configurations-----')
@@ -102,7 +105,7 @@ print('Total images: ', img_size)
 print('Total captions:', caption_size)
 print('total epoch: ', total_epoch)
 print('batch_size:', batch_size)
-print('The number of LSTM layers::', num_layers)
+print('The number of LSTM layers:', num_layers)
 print('optimizer:', opt)
 #print('Lerning rate: ', lerning_rate)
 
@@ -111,7 +114,10 @@ print('optimizer:', opt)
 
 while dataset.epoch <= total_epoch:
     
-    now_epoch = dataset.get_now_epoch()
+    #update parameters
+    optimizer.update()
+    
+    now_epoch = dataset.now_epoch
     img_batch, cap_batch = dataset.get_batch(batch_size)
     
     if args.gpu:
@@ -125,20 +131,20 @@ while dataset.epoch <= total_epoch:
     loss = model(hx, cx, cap_batch)
 
     model.cleargrads()
-    model.backward()
-    
-    #update parameters
-    optimizer.update()
+    loss.backward()
 
     sum_loss += loss.data * batch_size
     iteration += 1
     
-    if now_epoch is not total_epoch:
-        print('epoch:', now_epoch)
-        serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + now_epoch + '.model'), model)
-        serializers.save_hdf5(os.path.join(args.output_dir, 'optimizers', 'optimizer' + now_epoch + '.model'), optimizer)
+    if now_epoch is total_epoch:
+        
+        mean_loss = sum_loss / caption_size
 
-        mean_loss = sum_loss / data_size
+        print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, iteration + '/' + total_iteration, mean_loss))
+        
+        serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)
+        serializers.save_hdf5(os.path.join(args.output_dir, 'optimizers', 'optimizer' + str(now_epoch) + '.model'), optimizer)
+        
         with open(os.path.join(args.output_dir, 'logs', 'mean_loss.txt'), 'a') as f:
             f.write(str(mean_loss) + '\n')
         sum_loss = 0
