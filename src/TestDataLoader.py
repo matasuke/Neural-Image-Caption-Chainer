@@ -1,6 +1,7 @@
 from DataLoader import DataLoader
 import argparse
 import pickle
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', '-d', type=str, default="../data/captions/processed/dataset_STAIR_jp.pkl",
@@ -32,10 +33,17 @@ batch_size = args.batch_size
 
 for i in range(0, args.epoch):
     img_batch, cap_batch = dataset.get_batch(batch_size, raw_img=False)
-    print(img_batch.shape())
-    print(cap_batch.shape())
-    """ 
+
     for img, words in zip(img_batch, cap_batch):
         print('img', img)
         print('words', words)
-    """
+
+'''
+    print(np.shape(img_batch))
+    print(np.shape(cap_batch))
+    
+    if i <= 1:
+        for img, words in zip(img_batch, cap_batch):
+            print(np.shape(img)) 
+            print(np.shape(words)) 
+'''
