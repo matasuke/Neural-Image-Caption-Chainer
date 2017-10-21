@@ -1,8 +1,17 @@
 # Neural Image Caption Chainer
-- This is Neural Image Caption implementation by Chainer for Japanese caption.
+This repository is about Neural Image Caption implementation by Chainer including Japanese, English and Chinese and so on
+
+### Requirements
+Chainer v3
 
 ## Datasets
-[STAIR Captions](https://stair-lab-cit.github.io/STAIR-captions-web/)
+
+### Images
+- [MSCOCO Images](http://cocodataset.org/)
+
+### Captions
+- [MSCOCO Annotations](http://cocodataset.org/#download)
+- [STAIR Captions](https://stair-lab-cit.github.io/STAIR-captions-web/)
 
 ## USAGE
 
@@ -15,14 +24,26 @@
 2. this function split datasets and save them for easy usage. also tokenize them.
 `python preprocess_captions.py`
 
-### Language Availability
+## Language Availability
+- prepared languages in this repository are below this
+    + English
+    + Japanese
+- going to prepare these languages
+    + Chinese
+    + Korean
+    + Cantonese
+    + Russian
+    + French
+    + Spanish
 
-### generate captions using prepared model
+## generate captions using prepared model
 
-### train MSCOCO data
+## train MSCOCO data
 
-### train your own data
+## train your own data
 
+
+## Experiments
 
 ## Next to do
 -  prepare multi language processer.
@@ -30,3 +51,5 @@
 -  prepare environments for experiment of generating captions
 -  implement caption model using Bokete(create humor caption model)
 -  implement web api
+
+## Citations
