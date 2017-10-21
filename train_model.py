@@ -5,7 +5,6 @@ import argparse
 import numpy as np
 import pickle
 import chainer
-import chainer.function as F
 from chainer import cuda
 from chainer.cuda import cupy as cp
 from chainer import optimizers, serializers
@@ -28,14 +27,14 @@ parser.add_argument('--preload', '-p', type=bool, default=False,
                     help="preload all image features onto RAM before trainig")
 parser.add_argument('--epoch', type=int, default=10, 
                     help="The number of epoch")
-parser.add_argument('--batch', type=int, default=256,
+parser.add_argument('--batch_size', type=int, default=256,
                     help="Mini batch size")
 parser.add_argument('--hidden_dim', '-hd', type=int, default=512,
                     help="The number of hiden dim size in LSTM")
 parser.add_argument('--img_feature_dim', '-fd', type=int, default=2048,
                     help="The number of image feature dim as input to LSTM")
 parser.add_argument('--optimizer', '-opt', type=str, default="Adam", choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'SGD', 'RMSprop'],
-                    help="T")
+                    help="Type of iptimizers")
 parser.add_argument('--dropout_ratio', '-do', type=float, default=0.5,
                     help="Dropout ratio")
 parser.add_argument('--n_layers', '-nl', type=int, default=1,
@@ -70,7 +69,7 @@ dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload
 model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
 
 #cupy settings
-if args.gpu:
+if args.gpu >= 0:
     xp = cp
     cuda.get_device_from_id(args.gpu).use()
     model.to_gpu()
@@ -92,7 +91,7 @@ optimizer.setup(model)
 
 # configuration about training
 total_epoch = args.epoch
-batch_size = args.batch
+batch_size = args.batch_size
 caption_size = dataset.caption_size
 total_iteration = math.ceil(caption_size / batch_size)
 img_size = dataset.img_size
@@ -115,14 +114,14 @@ print('optimizer:', opt)
 
 print('\nepoch 1')
 
-while dataset.epoch <= total_epoch:
+while dataset.now_epoch <= total_epoch:
     
     model.cleargrads()
     
     now_epoch = dataset.now_epoch
     img_batch, cap_batch = dataset.get_batch(batch_size)
     
-    if args.gpu:
+    if args.gpu >= 0:
         img_batch = cuda.to_gpu(img_batch, device=args.gpu)
         cap_batch = [ cuda.to_gpu(x, device=args.gpu) for x in cap_batch]
 
@@ -141,7 +140,7 @@ while dataset.epoch <= total_epoch:
     iteration += 1
     
     print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 5)))
-    if now_epoch is total_epoch:
+    if now_epoch is not dataset.now_epoch:
         
         mean_loss = sum_loss / caption_size
 
