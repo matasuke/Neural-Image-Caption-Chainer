@@ -44,9 +44,8 @@ while dataset.now_epoch <= args.epoch:
     img_batch = cuda.to_gpu(img_batch, device=0)
     cap_batch = [ cuda.to_gpu(x, device=0) for x in cap_batch]
     
-    if dataset.now_epoch < 3:
-        print(np.shape(img_batch))
-        print(np.shape(cap_batch))
+    print(np.shape(img_batch))
+    print(np.shape(cap_batch))
 
     iteration += 1
 
