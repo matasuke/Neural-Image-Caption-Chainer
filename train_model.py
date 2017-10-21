@@ -14,7 +14,7 @@ from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu', '-g', type=int, default=0,
+parser.add_argument('--gpu', '-g', type=int, default=1,
                     help="set GPU ID (negative value means using CPU)")
 parser.add_argument('--dataset', '-d', type=str, default="./data/captions/processed/dataset_STAIR_jp.pkl",
                     help="Path to preprocessed caption pkl file")
@@ -90,14 +90,19 @@ optimizer.setup(model)
 # configuration about training
 total_epoch = args.epoch
 batch_size = args.batch
-data_size = dataset.get_caption_size()
+data_size, caption_size = dataset.get_caption_size()
+img_size = dataset.get_img_size()
+num_layers = dataset.get_num_layers()
+sum_loss = 0
+iteration = 1
 
 # before training
 print('-----configurations-----')
-print('Total images: ', dataset.get_image_size())
-print('Total captions:', dataset.get_caption_size())
-print('epoch: ', total_epoch)
+print('Total images: ', img_size)
+print('Total captions:', caption_size)
+print('total epoch: ', total_epoch)
 print('batch_size:', batch_size)
+print('The number of LSTM layers::', num_layers)
 print('optimizer:', opt)
 #print('Lerning rate: ', lerning_rate)
 
@@ -105,6 +110,8 @@ print('optimizer:', opt)
 #start training
 
 while dataset.epoch <= total_epoch:
+    
+    now_epoch = dataset.get_now_epoch()
     img_batch, cap_batch = dataset.get_batch(batch_size)
     
     if args.gpu:
@@ -112,8 +119,8 @@ while dataset.epoch <= total_epoch:
         cap_batch = [ cuda.to_gpu(x, device=args.gpu) for x in cap_batch]
 
     #lstml inputs
-    hx = xp.zeros((model, n_layers, len(x_batch), model.hidden_dim), dtype=xp.float32)
-    cx = xp.zeros((model, n_layers, len(x_batch), model.hidden_dim), dtype=xp.float32)
+    hx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
+    cx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
 
     loss = model(hx, cx, cap_batch)
 
@@ -122,3 +129,17 @@ while dataset.epoch <= total_epoch:
     
     #update parameters
     optimizer.update()
+
+    sum_loss += loss.data * batch_size
+    iteration += 1
+    
+    if now_epoch is not total_epoch:
+        print('epoch:', now_epoch)
+        serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + now_epoch + '.model'), model)
+        serializers.save_hdf5(os.path.join(args.output_dir, 'optimizers', 'optimizer' + now_epoch + '.model'), optimizer)
+
+        mean_loss = sum_loss / data_size
+        with open(os.path.join(args.output_dir, 'logs', 'mean_loss.txt'), 'a') as f:
+            f.write(str(mean_loss) + '\n')
+        sum_loss = 0
+        iteration = 0

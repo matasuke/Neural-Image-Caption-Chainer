@@ -56,12 +56,20 @@ class DataLoader:
         return self.num_captions
 
     @property
-    def get_image_size(self):
+    def get_img_size(self):
         return self.num_images
 
     @property
+    def get_num_layers(self):
+        return self.n_layers
+
+    @property
+    def get_now_epoch(self):
+        return self.epoch
+
+    @property
     def is_new_epoch(self):
-        return 
+        pass 
 
 if __name__ == "__main__":
     import pickle
