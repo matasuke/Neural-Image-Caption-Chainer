@@ -127,8 +127,6 @@ while dataset.now_epoch <= total_epoch:
     if args.gpu >= 0:
         img_batch = cuda.to_gpu(img_batch, device=args.gpu)
         cap_batch = [ cuda.to_gpu(x, device=args.gpu) for x in cap_batch]
-        print(np.shape(img_batch))
-        print(np.shape(cap_batch))
 
     #lstml inputs
     hx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
