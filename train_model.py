@@ -1,5 +1,6 @@
 import sys
 import os
+import math
 import argparse
 import numpy as np
 import pickle
@@ -92,8 +93,8 @@ optimizer.setup(model)
 # configuration about training
 total_epoch = args.epoch
 batch_size = args.batch
-total_iteration = total_epoch / batch_size
 caption_size = dataset.caption_size
+total_iteration = math.ceil(caption_size / batch_size)
 img_size = dataset.img_size
 num_layers = args.n_layers
 sum_loss = 0
@@ -112,10 +113,11 @@ print('optimizer:', opt)
 
 #start training
 
+print('\nepoch 1')
+
 while dataset.epoch <= total_epoch:
     
-    #update parameters
-    optimizer.update()
+    model.cleargrads()
     
     now_epoch = dataset.now_epoch
     img_batch, cap_batch = dataset.get_batch(batch_size)
@@ -130,18 +132,23 @@ while dataset.epoch <= total_epoch:
 
     loss = model(hx, cx, cap_batch)
 
-    model.cleargrads()
     loss.backward()
+    
+    #update parameters
+    optimizer.update()
 
     sum_loss += loss.data * batch_size
     iteration += 1
     
+    print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 5)))
     if now_epoch is total_epoch:
         
         mean_loss = sum_loss / caption_size
 
-        print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, iteration + '/' + total_iteration, mean_loss))
-        
+        print('\nepoch {0} result/n', now_epoch-1)
+        print('epoch: {0} iteration: {1}, loss: {2:.5f}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(mean_loss), 5)))
+        print('\nepoch ', now_epoch)
+
         serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)
         serializers.save_hdf5(os.path.join(args.output_dir, 'optimizers', 'optimizer' + str(now_epoch) + '.model'), optimizer)
         
