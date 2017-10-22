@@ -25,7 +25,7 @@ parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/
                     help="The directory to save model and log")
 parser.add_argument('--preload', '-p', type=bool, default=True,
                     help="preload all image features onto RAM before trainig")
-parser.add_argument('--epoch', type=int, default=10, 
+parser.add_argument('--epoch', type=int, default=20, 
                     help="The number of epoch")
 parser.add_argument('--batch_size', type=int, default=256,
                     help="Mini batch size")
@@ -39,6 +39,8 @@ parser.add_argument('--dropout_ratio', '-do', type=float, default=0.5,
                     help="Dropout ratio")
 parser.add_argument('--n_layers', '-nl', type=int, default=1,
                     help="The number of layers")
+parser.add_argument('--load_model', '-lm', type=int, default=0,
+                    help="At which epoch you want to restart training(0 means training from zero)")
 args = parser.parse_args()
 
 #create save directories
@@ -68,6 +70,7 @@ dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload
 #model preparation
 model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
 
+
 #cupy settings
 if args.gpu >= 0:
     xp = cp
@@ -89,6 +92,13 @@ elif opt == 'Adam':
 optimizer = optimizers.Adam()
 optimizer.setup(model)
 
+if args.load_model:
+    cap_model_path = os.path.join(args.output_dir, 'models', 'caption_model' + str(args.load_model) + '.model')
+    opt_model_path = os.path.join(args.output_dir, 'optimizers', 'optimizer' + str(args.load_model) + '.model')
+    serializers.load_hdf5(cap_model_path, model)
+    serializers.load_hdf5(opt_model_path, optimizer)
+
+
 # configuration about training
 total_epoch = args.epoch
 batch_size = args.batch_size
@@ -100,6 +110,7 @@ hidden_dim = args.hidden_dim
 num_layers = args.n_layers
 sum_loss = 0
 iteration = 0
+accuracy = 0
 
 # before training
 print('-----configurations-----')
@@ -111,7 +122,6 @@ print('The number of hidden dim:', hidden_dim)
 print('The number of LSTM layers:', num_layers)
 print('optimizer:', opt)
 #print('Lerning rate: ', lerning_rate)
-
 
 #start training
 
@@ -147,8 +157,8 @@ while dataset.now_epoch <= total_epoch:
         print('new epoch phase')
         mean_loss = sum_loss / caption_size
 
-        print('\nepoch {0} result/n', now_epoch-1)
-        print('epoch: {0} iteration: {1}, loss: {2:.5f}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(mean_loss), 5)))
+        print('\nepoch {0} result'.format(now_epoch-1))
+        print('epoch: {0} loss: {1}'.format(now_epoch, round(float(mean_loss), 5)))
         print('\nepoch ', now_epoch)
 
         serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)

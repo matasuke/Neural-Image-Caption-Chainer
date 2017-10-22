@@ -1,5 +1,6 @@
 import sys
 import argparse
+import chainer
 import chainer.functions as F
 from chainer import cuda
 from chainer import serializers
@@ -22,7 +23,7 @@ img_proc = Img_proc("imagenet")
 #prepare model
 model = ResNet()
 serializers.load_hdf5(args.model, model)
-model.train = False
+#model.train = False
 
 #load image
 print(args.img)
@@ -36,8 +37,9 @@ if args.gpu >= 0:
     img = cuda.to_gpu(img, device=args.gpu)
 
 #predict
-res = model(img, None)
-pred = F.softmax(res).data
+with chainer.using_config('train', False):
+    res = model(img, None)
+    pred = F.softmax(res).data
 
 if args.gpu >= 0:
     pred = cuda.to_cpu(pred)
