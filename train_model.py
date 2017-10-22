@@ -21,7 +21,7 @@ parser.add_argument('--dataset', '-d', type=str, default="./data/captions/proces
 parser.add_argument('--img_feature_root', '-f', type=str, default="./data/images/features/ResNet50/")
 parser.add_argument('--img_root', '-i', type=str, default="./data/images/original/",
                     help="Path to image files root")
-parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/STAIR",
+parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/STAIR2",
                     help="The directory to save model and log")
 parser.add_argument('--preload', '-p', type=bool, default=True,
                     help="preload all image features onto RAM before trainig")

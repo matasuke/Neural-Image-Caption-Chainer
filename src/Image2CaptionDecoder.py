@@ -4,7 +4,7 @@ import chainer.links as L
 import numpy as np
 
 class Image2CaptionDecoder(chainer.Chain):
-    def __init__(self, vocab_size, img_feature_dim=2048, hidden_dim=512, dropout_ratio=0.5, train=True, n_layers=1):
+    def __init__(self, vocab_size, img_feature_dim=2048, hidden_dim=512, dropout_ratio=0.5, n_layers=1):
         super(Image2CaptionDecoder, self).__init__(
             embed_word = L.EmbedID(vocab_size, hidden_dim),
             embed_img = L.Linear(img_feature_dim, hidden_dim),
@@ -12,7 +12,6 @@ class Image2CaptionDecoder(chainer.Chain):
             decode_word = L.Linear(hidden_dim, vocab_size)
         )
         self.dropout_ratio = dropout_ratio
-        self.train = train
         self.n_layers = n_layers
         self.hidden_dim = hidden_dim
 
@@ -26,11 +25,10 @@ class Image2CaptionDecoder(chainer.Chain):
         xs = [self.embed_word(caption) for caption in caption_batch]
         hy, cy, ys = self.lstm(hx, cx, xs)
         predicted_caption_batch = [self.decode_word(generated_caption) for generated_caption in ys]
-        if self.train:
+        if chainer.config.train:
             loss=0
             for y, t in zip(predicted_caption_batch, caption_batch):
-                #loss+=F.softmax_cross_entropy(y[0:-1], t[1:])
-                loss+=F.softmax_cross_entropy(y, t)
+                loss+=F.softmax_cross_entropy(y[0:-1], t[1:])
 
             return loss/len(predicted_caption_batch)
         else:

@@ -1,16 +1,15 @@
 import sys
 import numpy as np
 import pickle
+import argparse
 from copy import deepcopy
 import chainer
 from chainer import cuda
 import chainer.functions as F
-from chainer import cuda, Function, FunctionSet, gradient_check, Variable, optimizers
+from chainer import cuda
 from chainer import serializers
 
 from img_proc import Img_proc
-sys.path.append('CNN/resnet/')
-from ResNet50 import ResNet
 from Image2CaptionDecoder import Image2CaptionDecoder
 
 import heapq
@@ -23,8 +22,20 @@ class CaptionGenerator(object):
         self.img_proc = Img_proc(mean_type=mean)
         self.index2token = self.parse_dic(dict_path)
 
-        self.cnn_model = ResNet()
-        serializers.load_hdf5(cnn_model_path, self.cnn_path)
+        if cnn_model_type == 'ResNet':
+            sys.path.append('CNN/resnet/')
+            from ResNet50 import ResNet
+            self.cnn_model = ResNet()
+        elif cnn_model_type == 'VGG16':
+            sys.path.append('CNN/VGG/')
+            from VGG16 import VGG16
+            self.cnn_model = VGG16()
+        elif cnn_model_type == 'AlexNet':
+            sys.path.append('CNN/AlexNet')
+            from AlexNet import AlexNet
+            self.cnn_model = AlexNet()
+
+        serializers.load_hdf5(cnn_model_path, self.cnn_model)
         self.cnn_model.train = False
 
         self.rnn_model = Image2CaptionDecoder(len(self.token2index), hidden_dim=hidden_dim)
@@ -46,7 +57,7 @@ class CaptionGenerator(object):
             xp=np
 
     def parse_dic(self, dict_path):
-        with open('dict_path', 'rb') as f:
+        with open(dict_path, 'rb') as f:
             self.token2index = pickle.load(f)['train']['word_ids']
 
         return { v:k for k, v in self.token2index.items() }
@@ -57,7 +68,8 @@ class CaptionGenerator(object):
         cx = current_state['cell']
     
         #predict next word
-        hy, cy, next_words = self.rnn_model(hx, cx, word)
+        with chainer.using_config('train', False):
+            hy, cy, next_words = self.rnn_model(hx, cx, word)
         
         word_dist = F.softmax(next_words[0]).data[0]
         k_best_next_sentences = []
@@ -130,12 +142,39 @@ class CaptionGenerator(object):
     def generate_from_img(self, img_array):
         if self.gpu_id >= 0:
             img_array = cuda.to_gpu(img_array)
-        img_feature = self.cnn_model(img_array, 'feature').data.reshape(1, 1, 2048)
+        with chainer.using_config('train', False):
+            img_feature = self.cnn_model(img_array, 'feature').data.reshape(1, 1, 2048)
 
         return self.generate_from_img_feature(img_feature)
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--rnn_model_path', '-rm', type=str, default="../data/models/rnn/caption_model_STAIR.model",
+                        help="RNN model path")
+    parser.add_argument('--cnn_model_path', '-cm', type=str, default="../data/models/cnn/ResNet50.model",
+                        help="CNN model path")
+    parser.add_argument('--dict_path', '-d', type=str, default="../data/captions/processed/dataset_STAIR_jp.pkl",
+                        help="Dictionary path")
+    parser.add_argument('--cnn_model_type', '-ct', type=str, choices=['ResNet', 'VGG16', 'AlexNet'], default="ResNet",
+                        help="CNN model type")
+    parser.add_argument('--beamsize', '-b', type=int, default=3,
+                        help="beamsize")
+    parser.add_argument('--depth_limit', '-dl', type=int, default=50,
+                        help="max limit of generating tokens when constructing captions")
+    parser.add_argument('--gpu', '-g', type=int, default=0, 
+                        help="set GPU ID(negative value means using CPU)")
+    parser.add_argument('--first_word', '-fw', type=str, default='<S>',
+                        help="set first word")
+    parser.add_argument('--hidden_dim', '-hd', type=int, default=512,
+                        help="dimension of hidden layers")
+    parser.add_argument('--mean', '-m', type=str, choices=['imagenet'], default='imagenet',
+                        help="method to preprocessing images")
+    parser.add_argument('--img', '-i', type=str, default='../sample_imgs/sample_img2.jpg',
+                        help="path to test image (default is set as sample_img1.jpg)")
+    args = parser.parse_args()
+    
+    
     '''
     have to fixt dict_path for let it use vocaburary table
     now it can't be used. you can just use dataset.pkl file, which contains word2ids.
@@ -143,13 +182,16 @@ if __name__ == "__main__":
 
     xp = np
     caption_generator = CaptionGenerator(
-            rnn_model_path = "../data/models/rnn/caption_model_STAIR.model",
-            cnn_model_path = "../data/models/cnn/ResNet50.model",
-            dict_path = "../data/captions/processed/dataset_STAIR_jp.pkl",
-            cnn_model_type="ResNet",
-            beam_size = 3,
-            depth_limit = 50,
-            gpu_id = 1
+            rnn_model_path = args.rnn_model_path,
+            cnn_model_path = args.cnn_model_path,
+            dict_path = args.dict_path,
+            cnn_model_type=args.cnn_model_type,
+            beamsize = args.beamsize,
+            depth_limit = args.depth_limit,
+            gpu_id = args.gpu,
+            first_word=args.first_word,
+            hidden_dim=args.hidden_dim,
+            mean=args.mean
         )
 
     '''
@@ -173,7 +215,7 @@ if __name__ == "__main__":
         }
 
     '''
-    captions = caption_generator.generate('../sample_imgs/sample_img1.jpg')
-    for caption in captions:
-        print(caption['sentence'])
-        print(caption['log_likelihood'])
+    captions = caption_generator.generate(args.img)
+    for i, caption in enumerate(captions):
+        print('caption{0}: {1}'.format(i, caption['sentence']))
+        print('log: ', caption['log_likelihood'])
