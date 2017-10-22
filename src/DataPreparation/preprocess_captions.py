@@ -50,13 +50,13 @@ def save_pickle(out_data, p_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_train', '-it', type=str, default="../data/captions/converted/formatted_json_train_jp.pkl",
+    parser.add_argument('--input_train', '-it', type=str, default="../../data/captions/converted/formatted_json_train_jp.pkl",
                         help="input formatted JSON train file"
     )
-    parser.add_argument('--input_val', '-iv', type=str, default="../data/captions/converted/formatted_json_val_jp.pkl",
+    parser.add_argument('--input_val', '-iv', type=str, default="../../data/captions/converted/formatted_json_val_jp.pkl",
                         help="input formatted JSON val file"
     )
-    parser.add_argument('--out_dir', '-od', type=str, default="../data/captions/processed",
+    parser.add_argument('--out_dir', '-od', type=str, default="../../data/captions/processed",
                         help="output dir"
     )
     parser.add_argument('--out_file', '-of', type=str, default="dataset_STAIR_jp.pkl",

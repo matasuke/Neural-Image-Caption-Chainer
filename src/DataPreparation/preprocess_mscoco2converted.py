@@ -75,11 +75,11 @@ def create_converted(itoa, imgs):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='convert MS COCO formatted json to originally formatted ones')
-    parser.add_argument('--input_train', '-it', type=str, default="../data/captions/original/STAIR_Captions/stair_captions_v1.1_train.json",
+    parser.add_argument('--input_train', '-it', type=str, default="../../data/captions/original/STAIR_Captions/stair_captions_v1.1_train.json",
                         help="input train JSON file path")
-    parser.add_argument('--input_val', '-iv', type=str, default="../data/captions/original/STAIR_Captions/stair_captions_v1.1_val.json",
+    parser.add_argument('--input_val', '-iv', type=str, default="../../data/captions/original/STAIR_Captions/stair_captions_v1.1_val.json",
                         help="input val JSON file path")
-    parser.add_argument('--out_dir', '-od', type=str, default="../data/captions/converted",
+    parser.add_argument('--out_dir', '-od', type=str, default="../../data/captions/converted",
                         help="output dir path")
     parser.add_argument('--output_train', '-ot', type=str, default="formatted_json_train_jp.pkl", 
                         help="output file name for train data")

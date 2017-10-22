@@ -25,7 +25,7 @@ parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/
                     help="The directory to save model and log")
 parser.add_argument('--preload', '-p', type=bool, default=True,
                     help="preload all image features onto RAM before trainig")
-parser.add_argument('--epoch', type=int, default=20, 
+parser.add_argument('--epoch', type=int, default=50, 
                     help="The number of epoch")
 parser.add_argument('--batch_size', type=int, default=256,
                     help="Mini batch size")
