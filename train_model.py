@@ -151,14 +151,14 @@ while dataset.now_epoch <= total_epoch:
 
     sum_loss += loss.data * batch_size
     iteration += 1
-    
-    print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 5)))
+
+    print('epoch: {0} iteration: {1}, loss: {2}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 10)))
     if now_epoch is not dataset.now_epoch:
         print('new epoch phase')
         mean_loss = sum_loss / caption_size
 
         print('\nepoch {0} result'.format(now_epoch-1))
-        print('epoch: {0} loss: {1}'.format(now_epoch, round(float(mean_loss), 5)))
+        print('epoch: {0} loss: {1}'.format(now_epoch, round(float(mean_loss), 10)))
         print('\nepoch ', now_epoch)
 
         serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)

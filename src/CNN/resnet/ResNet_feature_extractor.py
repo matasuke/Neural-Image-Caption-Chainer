@@ -28,7 +28,7 @@ model.train = False
 
 #prepare GPU
 if args.gpu >= 0:
-    cuda.get_device(args.gpu).use()
+    cuda.get_device_from_id(args.gpu).use()
     model.to_gpu()
 
 # get the list of images

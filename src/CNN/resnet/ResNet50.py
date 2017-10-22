@@ -96,7 +96,7 @@ class ResNet(chainer.Chain):
         h = self.res4(h)
         h = self.res5(h)
         h = F.average_pooling_2d(h, 7, stride=1)
-        if t=="feature":
+        if t is "feature":
             return h
         h = self.fc(h)
 
