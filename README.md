@@ -51,5 +51,6 @@ Chainer v3
 -  prepare environments for experiment of generating captions
 -  implement caption model using Bokete(create humor caption model)
 -  implement web api
+-  check the validation of using <UNK> notation in training data
 
 ## Citations

@@ -1,6 +1,5 @@
 import sys
 import os
-import re
 import math
 import argparse
 import numpy as np
@@ -13,6 +12,8 @@ from chainer import optimizers, serializers
 sys.path.append('./src')
 from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
+
+#add function to calculate accuracy
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g', type=int, default=0,
@@ -34,7 +35,7 @@ parser.add_argument('--hidden_dim', '-hd', type=int, default=512,
                     help="The number of hiden dim size in LSTM")
 parser.add_argument('--img_feature_dim', '-fd', type=int, default=2048,
                     help="The number of image feature dim as input to LSTM")
-parser.add_argument('--optimizer', '-opt', type=str, default="Adam", choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'SGD', 'RMSprop'],
+parser.add_argument('--optimizer', '-opt', type=str, default="Adam", choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'NesterovAG', 'RMSprop', 'RMSpropGraves', 'SGD', 'SMORMS3'],
                     help="Type of iptimizers")
 parser.add_argument('--dropout_ratio', '-do', type=float, default=0.5,
                     help="Dropout ratio")
@@ -81,16 +82,27 @@ else:
     xp = np
 
 opt = args.optimizer
-'''
+
+#optimizers
 if opt == 'SGD':
     optimizer = optimizers.SGD()
 elif opt == 'AdaDelta':
     optimizer = optimizers.AdaDelta()
 elif opt == 'Adam':
     optimizer = optimizers.Adam()
-'''
-#optimizers
-optimizer = optimizers.Adam()
+elif opt == 'AdaGrad':
+    optimizer = optimizers.AdaGrad()
+elif opt == 'MomentumSGD':
+    optimizer = optimizers.MomentumSGD()
+elif opt == 'NesterovAG':
+    optimizer = optimizers.NesterovAG()
+elif opt == 'RMSprop':
+    optimizer = optimizers.RMSprop()
+elif opt == 'RMSpropGraves':
+    optimizer = optimizers.RMSpropGraves()
+elif opt == 'SMORMS3':
+    optimizer = optimizers.SMORMS3()
+
 optimizer.setup(model)
 
 if args.load_model:
@@ -113,16 +125,25 @@ sum_loss = 0
 iteration = 0
 accuracy = 0
 
+
+sen_title = '-----configurations-----'
+sen_gpu = 'GPU ID: ' + str(args.gpu)
+sen_img = 'Total images: ' + str(img_size)
+sen_cap = 'Total captions: ' + str(caption_size)
+sen_epoch = 'Total epoch: ' + str(total_epoch)
+sen_batch = 'Batch size: ' + str(batch_size)
+sen_hidden = 'The number of hidden dim: ' + str(hidden_dim)
+sen_LSTM = 'The number of LSTM layers: ' + str(num_layers)
+sen_optimizer = 'Optimizer: ' + str(opt)
+sen_learnning = 'Learning rate: '
+
+sen_conf = sen_title + '\n' + sen_gpu + '\n' + sen_img + '\n' + sen_cap + '\n' + sen_epoch + '\n' + sen_batch + '\n' + sen_hidden + '\n' + sen_LSTM + '\n' + sen_optimizer + '\n'
+
 # before training
-print('-----configurations-----')
-print('Total images: ', img_size)
-print('Total captions:', caption_size)
-print('total epoch: ', total_epoch)
-print('batch_size:', batch_size)
-print('The number of hidden dim:', hidden_dim)
-print('The number of LSTM layers:', num_layers)
-print('optimizer:', opt)
-#print('Lerning rate: ', lerning_rate)
+print(sen_conf)
+
+with open(os.path.join(args.output_dir, 'logs', 'configurations.txt'), 'w') as f:
+    f.write(sen_conf)
 
 #start training
 
