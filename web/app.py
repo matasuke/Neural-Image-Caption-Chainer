@@ -7,6 +7,7 @@ import base64
 import argparse
 import cv2
 import csv
+from chainer import serializers
 from json import dumps
 sys.path.append('../src')
 from CaptionGenerator import CaptionGenerator

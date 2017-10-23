@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import math
 import argparse
 import numpy as np
@@ -25,7 +26,7 @@ parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/
                     help="The directory to save model and log")
 parser.add_argument('--preload', '-p', type=bool, default=True,
                     help="preload all image features onto RAM before trainig")
-parser.add_argument('--epoch', type=int, default=50, 
+parser.add_argument('--epoch', type=int, default=100, 
                     help="The number of epoch")
 parser.add_argument('--batch_size', type=int, default=256,
                     help="Mini batch size")
@@ -97,14 +98,14 @@ if args.load_model:
     opt_model_path = os.path.join(args.output_dir, 'optimizers', 'optimizer' + str(args.load_model) + '.model')
     serializers.load_hdf5(cap_model_path, model)
     serializers.load_hdf5(opt_model_path, optimizer)
-
+    
+    dataset.epoch = args.load_model + 1
 
 # configuration about training
 total_epoch = args.epoch
 batch_size = args.batch_size
 caption_size = dataset.caption_size
 total_iteration = math.ceil(caption_size / batch_size)
-#total_iteration = caption_size // batch_size
 img_size = dataset.img_size
 hidden_dim = args.hidden_dim
 num_layers = args.n_layers
