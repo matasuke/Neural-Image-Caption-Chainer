@@ -123,3 +123,6 @@ ENV/
 
 #txt
 *.txt
+
+#env
+ENV.py

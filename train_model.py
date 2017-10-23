@@ -13,6 +13,9 @@ sys.path.append('./src')
 from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
 
+import ENV
+from slack_notification import post_slack
+
 #add function to calculate accuracy
 
 parser = argparse.ArgumentParser()
@@ -43,6 +46,8 @@ parser.add_argument('--n_layers', '-nl', type=int, default=1,
                     help="The number of layers")
 parser.add_argument('--load_model', '-lm', type=int, default=0,
                     help="At which epoch you want to restart training(0 means training from zero)")
+parser.add_argument('--slack', '-sl', type=bool, default=False,
+                    help="Notification to slack")
 args = parser.parse_args()
 
 #create save directories
@@ -188,5 +193,11 @@ while dataset.now_epoch <= total_epoch:
         
         with open(os.path.join(args.output_dir, 'logs', 'mean_loss.txt'), 'a') as f:
             f.write(str(mean_loss) + '\n')
+
+        if args.slack:
+            name = os.path.basename(args.output_dir)
+            text = 'epoch: ' + str(now_epoch-1) + ' loss: ' + str(mean_loss)
+            #ENV.POST_URL is set at ENV.py
+            post_slack(ENV.POST_URL, name, text)
         sum_loss = 0
         iteration = 0

@@ -1,4 +1,6 @@
+certifi==2017.7.27.1
 chainer==3.0.0
+chardet==3.0.4
 click==6.7
 cupy==2.0.0
 cycler==0.10.0
@@ -6,6 +8,7 @@ fastrlock==0.3
 filelock==2.0.12
 Flask==0.12.2
 h5py==2.7.1
+idna==2.6
 itsdangerous==0.24
 Janome==0.3.5
 jieba==0.39
@@ -22,7 +25,9 @@ protobuf==3.4.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.2
+requests==2.18.4
 scipy==0.19.1
 six==1.11.0
 tqdm==4.19.2
+urllib3==1.22
 Werkzeug==0.12.2
