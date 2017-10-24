@@ -157,7 +157,7 @@ if __name__ == "__main__":
                         help="CNN model path")
     parser.add_argument('--dict_path', '-d', type=str, default="../data/captions/processed/dataset_STAIR_jp.pkl",
                         help="Dictionary path")
-    parser.add_argument('--cnn_model_type', '-ct', type=str, choices=['ResNet', 'VGG16', 'AlexNet'], default="ResNet",
+    parser.add_argument('--cnn_model_type', '-ct', type=str, choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'NesterovAG', 'RMSprop', 'RMSpropGraves', 'SGD', 'SMORMS3'], default="ResNet",
                         help="CNN model type")
     parser.add_argument('--beamsize', '-b', type=int, default=3,
                         help="beamsize")
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_dim', '-hd', type=int, default=512,
                         help="dimension of hidden layers")
     parser.add_argument('--mean', '-m', type=str, choices=['imagenet'], default='imagenet',
-                        help="method to preprocessing images")
+                        help="method to preproces images")
     parser.add_argument('--img', '-i', type=str, default='../sample_imgs/sample_img2.jpg',
                         help="path to test image (default is set as sample_img1.jpg)")
     args = parser.parse_args()

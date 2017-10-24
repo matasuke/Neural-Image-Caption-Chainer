@@ -114,13 +114,6 @@ elif opt == 'SMORMS3':
 optimizer.setup(model)
 optimizer.add_hook(chainer.optimizer.GradientClipping(grad_clip))
 
-if args.load_model:
-    cap_model_path = os.path.join(args.output_dir, 'models', 'caption_model' + str(args.load_model) + '.model')
-    opt_model_path = os.path.join(args.output_dir, 'optimizers', 'optimizer' + str(args.load_model) + '.model')
-    serializers.load_hdf5(cap_model_path, model)
-    serializers.load_hdf5(opt_model_path, optimizer)
-    
-    dataset.epoch = args.load_model + 1
 
 # configuration about training
 total_epoch = args.epoch
@@ -135,6 +128,7 @@ sum_acc = 0
 iteration = 0
 accuracy = 0
 l2norm = grad_clip
+output_dir = os.path.join(args.output_dir, os.path.splitext(os.path.basename(args.dataset))[0] + '_' + str(batch_size) + '_' + str(opt))
 
 sen_title = '-----configurations-----'
 sen_gpu = 'GPU ID: ' + str(args.gpu)
@@ -151,7 +145,6 @@ sen_l2norm = 'L2norm: ' + str(l2norm)
 sen_conf = sen_title + '\n' + sen_gpu + '\n' + sen_img + '\n' + sen_cap + '\n' + sen_epoch + '\n' + sen_batch + '\n' + sen_hidden + '\n' + sen_LSTM + '\n' + sen_optimizer + '\n' + sen_l2norm + '\n'
 
 #create save directories
-output_dir = os.path.join(args.output_dir, os.path.splitext(os.path.basename(args.dataset))[0] + '_' + str(batch_size) + '_' + str(opt))
 if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
     os.mkdir(os.path.join(output_dir, 'models'))
@@ -164,6 +157,15 @@ print(sen_conf)
 
 with open(os.path.join(output_dir, 'logs', 'configurations.txt'), 'w') as f:
     f.write(sen_conf)
+
+# load model
+if args.load_model:
+    cap_model_path = os.path.join(output_dir, 'models', 'caption_model' + str(args.load_model) + '.model')
+    opt_model_path = os.path.join(output_dir, 'optimizers', 'optimizer' + str(args.load_model) + '.model')
+    serializers.load_hdf5(cap_model_path, model)
+    serializers.load_hdf5(opt_model_path, optimizer)
+    
+    dataset.epoch = args.load_model + 1
 
 #start training
 
@@ -204,13 +206,13 @@ while dataset.now_epoch <= total_epoch:
         mean_acc = sum_acc / caption_size
 
         print('\nepoch {0} result'.format(now_epoch-1))
-        print('epoch: {0} loss: {1} acc: {2}'.format(now_epoch, round(float(mean_loss), 10)), round(float(mean_acc), 10))
+        print('epoch: {0} loss: {1} acc: {2}'.format(now_epoch, round(float(mean_loss), 10), round(float(mean_acc), 10)))
         print('\nepoch ', now_epoch)
 
-        serializers.save_hdf5(os.path.join(args.output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)
-        serializers.save_hdf5(os.path.join(args.output_dir, 'optimizers', 'optimizer' + str(now_epoch) + '.model'), optimizer)
+        serializers.save_hdf5(os.path.join(output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)
+        serializers.save_hdf5(os.path.join(output_dir, 'optimizers', 'optimizer' + str(now_epoch) + '.model'), optimizer)
         
-        with open(os.path.join(args.output_dir, 'logs', 'logs.txt'), 'a') as f:
+        with open(os.path.join(output_dir, 'logs', 'logs.txt'), 'a') as f:
             log_sen = str(now_epoch - 1) + ',' + str(mean_loss) + ',' + str(mean_acc) + '\n'
             f.write(log_sen)
 
