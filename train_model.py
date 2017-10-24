@@ -16,7 +16,7 @@ from DataLoader import DataLoader
 import ENV
 from slack_notification import post_slack
 
-#add function to calculate accuracy
+#separate dataset and dictionary file to use less memory
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g', type=int, default=0,
@@ -150,20 +150,20 @@ sen_l2norm = 'L2norm: ' + str(l2norm)
 
 sen_conf = sen_title + '\n' + sen_gpu + '\n' + sen_img + '\n' + sen_cap + '\n' + sen_epoch + '\n' + sen_batch + '\n' + sen_hidden + '\n' + sen_LSTM + '\n' + sen_optimizer + '\n' + sen_l2norm + '\n'
 
-# before training
-print(sen_conf)
-
-with open(os.path.join(args.output_dir, 'logs', 'configurations.txt'), 'w') as f:
-    f.write(sen_conf)
-
 #create save directories
-output_dir = args.output_dir + '_' + str(batch_size) + '_' + str(opt) 
+output_dir = os.path.join(args.output_dir, os.path.splitext(os.path.basename(args.dataset))[0] + '_' + str(batch_size) + '_' + str(opt))
 if not os.path.isdir(output_dir):
-    os.makedirs(args.output_dir)
+    os.makedirs(output_dir)
     os.mkdir(os.path.join(output_dir, 'models'))
     os.mkdir(os.path.join(output_dir, 'optimizers'))
     os.mkdir(os.path.join(output_dir, 'logs'))
     print('making some directories to ', output_dir)
+
+# before training
+print(sen_conf)
+
+with open(os.path.join(output_dir, 'logs', 'configurations.txt'), 'w') as f:
+    f.write(sen_conf)
 
 #start training
 
@@ -215,11 +215,11 @@ while dataset.now_epoch <= total_epoch:
             f.write(log_sen)
 
         if args.slack:
-            name = args.output_dir
+            name = output_dir
             if name[-1] == '/':
                 name =name[:-1]
             name = os.path.basename(name)
-            text = 'epoch: ' + str(now_epoch-1) + ' loss: ' + str(mean_loss)
+            text = 'epoch: ' + str(now_epoch-1) + ' loss: ' + str(mean_loss) + ' acc:' + str(mean_acc)
             #ENV.POST_URL is set at ENV.py
             post_slack(ENV.POST_URL, name, text)
         sum_loss = 0
