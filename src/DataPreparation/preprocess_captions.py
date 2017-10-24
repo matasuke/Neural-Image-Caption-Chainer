@@ -13,7 +13,7 @@ class Tokenizer(object):
 
         if self.lang == 'jp':
             from janome.tokenizer import Tokenizer
-            t = Tokenizer()
+            self.t = Tokenizer()
             self.segmenter= lambda sentence: list(token.surface for token in self.t.tokenize(sentence))
 
         elif self.lang == 'cn':
@@ -128,7 +128,7 @@ if __name__ == '__main__':
             img_idx += 1
 
         else:
-            for caption in enumerate(img['captions']):
+            for caption in img['captions']:
                 caption_tokens = ['<S>']
                 caption_tokens += tokenizer.pre_process(caption)
                 caption_tokens.append('</S>')

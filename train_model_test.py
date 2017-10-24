@@ -4,6 +4,7 @@ import math
 import argparse
 import numpy as np
 import pickle
+import json
 import chainer
 from chainer import cuda
 from chainer.cuda import cupy as cp
@@ -21,11 +22,11 @@ from slack_notification import post_slack
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g', type=int, default=0,
                     help="set GPU ID (negative value means using CPU)")
-parser.add_argument('--dataset', '-d', type=str, default="./data/captions/processed/dataset_STAIR_jp.pkl",
+parser.add_argument('--vocab', '-v', default="../chainer-caption/data/MSCOCO/mscoco_caption_train2014_processed_dic.json",)
+parser.add_argument('--dataset', '-d', type=str, default="../chainer-caption/data/MSCOCO/mscoco_caption_train2014_processed.json",
                     help="Path to preprocessed caption pkl file")
-parser.add_argument('--img_feature_root', '-f', type=str, default="./data/images/features/ResNet50/")
-parser.add_argument('--img_root', '-i', type=str, default="./data/images/original/",
-                    help="Path to image files root")
+parser.add_argument('--img_feature_root', '-f', type=str, default="../chainer-caption/data/MSCOCO/train2014_ResNet50_features/COCO_train2014_")
+parser.add_argument('--filename_img_id',default=False,type=bool,help='image id is filename')
 parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/STAIR2",
                     help="The directory to save model and log")
 parser.add_argument('--preload', '-p', type=bool, default=True,
@@ -62,15 +63,14 @@ if not os.path.isdir(args.output_dir):
 #data preparation
 print('loading preprocessed data...')
 
-with open(args.dataset, 'rb') as f:
-    data = pickle.load(f)
+with open(args.vocab, 'r') as f:
+    token2index = json.load(f)
 
-train_data = data['train']
-val_data = data['val']
-test_data = data['test']
+with open(args.dataset, 'r') as f:
+    data = json.load(f)
 
 #word dictionary
-token2index = train_data['word_ids']
+token2index = {v:k for k, v in token2index.items()}
 
 dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.img_root)
 
