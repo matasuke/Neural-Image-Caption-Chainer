@@ -119,8 +119,9 @@ class CaptionGenerator(object):
         batch_size = 1
         hx = xp.zeros((self.rnn_model.n_layers, batch_size, self.rnn_model.hidden_dim), dtype=xp.float32)
         cx = xp.zeros((self.rnn_model.n_layers, batch_size, self.rnn_model.hidden_dim), dtype=xp.float32)
-
-        hy, cy = self.rnn_model.input_cnn_feature(hx, cx, img_feature)
+        
+        with chainer.using_config('train', False):
+            hy, cy = self.rnn_model.input_cnn_feature(hx, cx, img_feature)
 
         initial_state = {
                 "hidden": hy,

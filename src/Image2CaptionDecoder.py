@@ -27,10 +27,11 @@ class Image2CaptionDecoder(chainer.Chain):
         predicted_caption_batch = [self.decode_word(generated_caption) for generated_caption in ys]
         if chainer.config.train:
             loss=0
+            acc = 0
             for y, t in zip(predicted_caption_batch, caption_batch):
                 loss+=F.softmax_cross_entropy(y[0:-1], t[1:])
-
-            return loss/len(predicted_caption_batch)
+                acc += F.accuracy(y[0:-1], t[1:])
+            return loss/len(predicted_caption_batch), acc/len(predicted_caption_batch)
         else:
             return hy, cy, predicted_caption_batch
 
