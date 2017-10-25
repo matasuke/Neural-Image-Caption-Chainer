@@ -67,7 +67,11 @@ $(function(){
                     .success(function(data, statusText, jqXHR){
 
                         $('#captions').empty();
+                        $('#detail').empty();
                         
+                        //var detail = '<p>' + String(data['jp']) + '</p>';
+                        //$('detail').append(detail);
+
                         var languages = ['Japanese', 'English'];
                         var langs = ['jp', 'en']
                         
