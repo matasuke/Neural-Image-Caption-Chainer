@@ -48,16 +48,16 @@ def connect_tokens_jp(tokens):
 def connect_tokens_en(tokens):
     return ' '.join(tokens)
 
-def parse_captions_jp(captions):
+def parse_captions_jp(captions, beamsize):
     output = []
-    for i, caption in enumerate(captions):
+    for i, caption in enumerate(captions[:beamsize]):
         output.append({'No': i, 'caption': connect_tokens_jp(caption['sentence'][1:-1]), 'tokens': caption['sentence'], 'log': caption['log_likelihood'], 'num_tokens': len(caption['sentence'])})
     
     return output
 
-def parse_captions_en(captions):
+def parse_captions_en(captions, beamsize):
     output = []
-    for i, caption in enumerate(captions):
+    for i, caption in enumerate(captions[:beamsize]):
         output.append({'No': i, 'caption': connect_tokens_en(caption['sentence'][1:-1]), 'tokens': caption['sentence'], 'log': caption['log_likelihood'], 'num_tokens': len(caption['sentence'])})
     
     return output
@@ -67,7 +67,7 @@ app.config['UPLOAD_FOLDER'] = WEB_ENV.UPLOAD_FOLDER
 
 @app.route('/', methods=['GET'])
 def generate_caption():
-    title = 'Neural Image Caption Experiment Platform'
+    title = 'Neural Image Caption'
     conf = model_configuration(args)
     return render_template('index.html', title = title, configuration = conf)
 
@@ -92,8 +92,8 @@ def return_captions():
     jp_captions = jp_model.generate(img_path)
     en_captions = en_model.generate(img_path)
     
-    output.update({'jp': parse_captions_jp(jp_captions)})
-    output.update({'en': parse_captions_en(en_captions)})
+    output.update({'jp': parse_captions_jp(jp_captions, args.beamsize)})
+    output.update({'en': parse_captions_en(en_captions, args.beamsize)})
 
     return jsonify(output)
 
