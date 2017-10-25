@@ -6,3 +6,6 @@ th, td{
     font-weight: bold;
 }
 
+#captions, #configuration{
+    margin-top: 3%;
+}

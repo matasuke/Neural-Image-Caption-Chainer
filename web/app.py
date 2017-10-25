@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 import flask
-from flask import Flask, render_template, request, jsonify, Response, send_from_directory
+from flask import Flask, render_template, request, jsonify, Response
 from werkzeug import secure_filename
 import numpy as np
 import base64
@@ -68,7 +68,8 @@ app.config['UPLOAD_FOLDER'] = WEB_ENV.UPLOAD_FOLDER
 @app.route('/', methods=['GET'])
 def generate_caption():
     title = 'Neural Image Caption Experiment Platform'
-    return render_template('index.html', title=title)
+    conf = model_configuration(args)
+    return render_template('index.html', title = title, configuration = conf)
 
 @app.route('/api', methods=['POST'])
 def return_captions():
@@ -94,7 +95,6 @@ def return_captions():
     output.update({'jp': parse_captions_jp(jp_captions)})
     output.update({'en': parse_captions_en(en_captions)})
 
-    print(output)
     return jsonify(output)
 
 if __name__=='__main__':
