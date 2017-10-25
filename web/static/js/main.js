@@ -58,6 +58,7 @@ $(function(){
                         url: '/api',
                         type: 'POST',
                         contentType: 'image/jpeg',
+                        //contentType: 'multipart/form-data'
                         dataType: 'json',
                         data: fd,
                         contentType: false,
@@ -65,27 +66,36 @@ $(function(){
                     })
                     .success(function(data, statusText, jqXHR){
 
-                        var captions = data.results[0]
-                        
                         $('#captions').empty();
                         
-                        var head = '<tr class="active"><th class="col-md-1">Candidates</th><th class="col-md-4">Generated Captions</th></tr>';
+                        var languages = ['Japanese', 'English'];
+                        var langs = ['jp', 'en']
                         
+                        var head = '<tr class="active"><th class="col-md-1">Language</th><th class="col-md-3">Detail</th></tr>';
                         $('#captions').append(head);
                         
-                        for(i = 0; i < captions.length; i++){
-                            var caption = captions[i];
-                            var element = '<tr><td>Candidate ' + i.toFixed() + '</td><td>' + caption + '</td></tr>';
-                            $('#captions').append(element);
+                        var num_langs = Object.keys(data).length;
+                        for(i = 0; i < num_langs; i++){
+                            var caps = data[langs[i]];
+                            var elements = '<tr><td class="lang">' + languages[i] + '</td><td><table class="table"><tr class="active"><th>No</th><th>Captions</th>';
 
+                            num_caps = Object.keys(caps).length;
+                            for(j = 0; j < num_caps; j++){
+                                var cap = caps[j];
+                                elements += '<tr><td>' + String(cap['No'] + 1) + '</td><td>' + cap['caption'] + '</td></tr>';
+                            }
+                            elements += '</table></td></tr>';
+                            $('#captions').append(elements);
                         }
-                    )
+
+                    })
                     .fail(function(jqXHR, statusText, errorThrown){
                         console.log(errorThrown);
                         console.log(statusText);
                         console.log(jqXHR);
                     });
                 }
+            image.src = evt.target.result;
             }
         fr.readAsDataURL(file);
         }
@@ -131,3 +141,5 @@ drawImage = function(tag, img){
     }
     image.src = "data:image/jpg;base64," + img;
 }
+
+

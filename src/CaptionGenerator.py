@@ -12,6 +12,7 @@ from chainer import serializers
 from img_proc import Img_proc
 from Image2CaptionDecoder import Image2CaptionDecoder
 
+sys.path.append('./CNN')
 import heapq
 
 class CaptionGenerator(object):
@@ -23,16 +24,13 @@ class CaptionGenerator(object):
         self.index2token = self.parse_dic(dict_path)
 
         if cnn_model_type == 'ResNet':
-            sys.path.append('CNN/resnet/')
-            from ResNet50 import ResNet
+            from resnet.ResNet50 import ResNet
             self.cnn_model = ResNet()
         elif cnn_model_type == 'VGG16':
-            sys.path.append('CNN/VGG/')
-            from VGG16 import VGG16
+            from vgg.VGG16 import VGG16
             self.cnn_model = VGG16()
         elif cnn_model_type == 'AlexNet':
-            sys.path.append('CNN/AlexNet')
-            from AlexNet import AlexNet
+            from alexnet.AlexNet import AlexNet
             self.cnn_model = AlexNet()
 
         serializers.load_hdf5(cnn_model_path, self.cnn_model)
@@ -157,7 +155,7 @@ if __name__ == "__main__":
                         help="CNN model path")
     parser.add_argument('--dict_path', '-d', type=str, default="../data/captions/processed/dataset_STAIR_jp.pkl",
                         help="Dictionary path")
-    parser.add_argument('--cnn_model_type', '-ct', type=str, choices=['AdaDelta', 'AdaGrad', 'Adam', 'MomentumSGD', 'NesterovAG', 'RMSprop', 'RMSpropGraves', 'SGD', 'SMORMS3'], default="ResNet",
+    parser.add_argument('--cnn_model_type', '-ct', type=str, choices=['ResNet', 'VGG16', 'AlexNet'], default="ResNet",
                         help="CNN model type")
     parser.add_argument('--beamsize', '-b', type=int, default=3,
                         help="beamsize")

@@ -17,6 +17,7 @@ import ENV
 from slack_notification import post_slack
 
 #separate dataset and dictionary file to use less memory
+#prepare validation and test data 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g', type=int, default=0,
