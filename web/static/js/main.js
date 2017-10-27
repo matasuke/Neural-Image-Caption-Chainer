@@ -72,15 +72,14 @@ $(function(){
                         //var detail = '<p>' + String(data['jp']) + '</p>';
                         //$('detail').append(detail);
 
-                        var languages = ['Japanese', 'English'];
-                        var langs = ['jp', 'en']
+                        var languages = ['Japanese', 'English', 'Chinese'];
                         
                         var head = '<tr class="active"><th class="col-md-1">Language</th><th class="col-md-3">Detail</th></tr>';
                         $('#captions').append(head);
                         
                         var num_langs = Object.keys(data).length;
                         for(i = 0; i < num_langs; i++){
-                            var caps = data[langs[i]];
+                            var caps = data[languages[i]];
                             var elements = '<tr><td class="lang">' + languages[i] + '</td><td><table class="table"><tr class="active"><th>No</th><th>Captions</th>';
 
                             num_caps = Object.keys(caps).length;

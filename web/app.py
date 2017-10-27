@@ -22,8 +22,10 @@ def model_configuration(args):
     cnn_model_type = args.cnn_model_type
     rnn_model_jp_path = args.rnn_model_jp_path
     rnn_model_en_path = args.rnn_model_en_path
+    rnn_model_ch_path = args.rnn_model_ch_path
     dict_jp_path = args.dict_jp_path
     dict_en_path = args.dict_en_path
+    dict_ch_path = args.dict_ch_path
     beamsize = args.beamsize
     depth_limit = args.depth_limit
     gpu = args.gpu
@@ -31,7 +33,7 @@ def model_configuration(args):
     hidden_dim = args.hidden_dim
     mean = args.mean
 
-    conf_dict = {'cnn_model_path': cnn_model_path, 'cnn_model_type': cnn_model_type, 'rnn_model_jp_path': rnn_model_jp_path, 'rnn_model_en_path': rnn_model_en_path, 'dict_jp_path': dict_jp_path, 'dict_en_path': dict_en_path, 'beamsize': beamsize, 'depth_limit': depth_limit, 'gpu': gpu, 'first_word': first_word, 'hidden_dim': hidden_dim, 'mean': mean}
+    conf_dict = {'cnn_model_path': cnn_model_path, 'cnn_model_type': cnn_model_type, 'rnn_model_jp_path': rnn_model_jp_path, 'rnn_model_en_path': rnn_model_en_path, 'rnn_model_ch_path': rnn_model_ch_path, 'dict_jp_path': dict_jp_path, 'dict_en_path': dict_en_path, 'dict_ch_path': dict_ch_path, 'beamsize': beamsize, 'depth_limit': depth_limit, 'gpu': gpu, 'first_word': first_word, 'hidden_dim': hidden_dim, 'mean': mean}
 
     return conf_dict
 
@@ -42,25 +44,19 @@ def allowed_file(filename):
     else:
         return False
 
-def connect_tokens_jp(tokens):
-    return ''.join(tokens)
+def agglutinative(tokens, agg=True):
+    if agg:
+        return ''.join(tokens)
+    else:
+        return ' '.join(tokens)
 
-def connect_tokens_en(tokens):
-    return ' '.join(tokens)
-
-def parse_captions_jp(captions, beamsize):
+def parse_captions(captions, agg, beamsize):
     output = []
     for i, caption in enumerate(captions[:beamsize]):
-        output.append({'No': i, 'caption': connect_tokens_jp(caption['sentence'][1:-1]), 'tokens': caption['sentence'], 'log': caption['log_likelihood'], 'num_tokens': len(caption['sentence'])})
-    
+        output.append({'No': i, 'caption': agglutinative(caption['sentence'][1:-1], agg), 'tokens': caption['sentence'], 'log': caption['log_likelihood'], 'num_tokens': len(caption['sentence'])})
+
     return output
 
-def parse_captions_en(captions, beamsize):
-    output = []
-    for i, caption in enumerate(captions[:beamsize]):
-        output.append({'No': i, 'caption': connect_tokens_en(caption['sentence'][1:-1]), 'tokens': caption['sentence'], 'log': caption['log_likelihood'], 'num_tokens': len(caption['sentence'])})
-    
-    return output
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = WEB_ENV.UPLOAD_FOLDER
@@ -91,10 +87,12 @@ def return_captions():
     output = {}
     jp_captions = jp_model.generate(img_path)
     en_captions = en_model.generate(img_path)
+    ch_captions = ch_model.generate(img_path)
     
-    output.update({'jp': parse_captions_jp(jp_captions, args.beamsize)})
-    output.update({'en': parse_captions_en(en_captions, args.beamsize)})
-
+    output.update({'Japanese': parse_captions(jp_captions, True, args.beamsize)})
+    output.update({'English': parse_captions(en_captions, False, args.beamsize)})
+    output.update({'Chinese': parse_captions(ch_captions, True, args.beamsize)})
+    
     return jsonify(output)
 
 if __name__=='__main__':
@@ -104,12 +102,16 @@ if __name__=='__main__':
                         help="RNN japanese model path")
     parser.add_argument('--rnn_model_en_path', '-rem', type=str, default=os.path.join('..', 'data', 'models', 'rnn', 'MSCOCO_en_256_Adam.model'),
                         help="RNN english model path")
+    parser.add_argument('--rnn_model_ch_path', '-rcm', type=str, default=os.path.join('..', 'data', 'models', 'rnn', 'MSCOCO_ch_mt_256_Adam.model'),
+                        help="RNN chinese model path")
     parser.add_argument('--cnn_model_path', '-cm', type=str, default=os.path.join('..', 'data', 'models', 'cnn', 'ResNet50.model'),
                         help="CNN model path")
     parser.add_argument('--dict_jp_path', '-jd', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
                         help="Japanese Dictionary path")
     parser.add_argument('--dict_en_path', '-ed', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_MSCOCO_en.pkl'),
                         help="English Dictionary path")
+    parser.add_argument('--dict_ch_path', '-cd', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_MSCOCO_ch_mt.pkl'),
+                        help="Chinese Dictionary path")
     parser.add_argument('--cnn_model_type', '-ct', type=str, choices = ['ResNet', 'VGG16', 'AlexNet'], default="ResNet")
     parser.add_argument('--beamsize', '-b', type=str, default=3,
                         help="beamsize")
@@ -141,6 +143,18 @@ if __name__=='__main__':
             rnn_model_path = args.rnn_model_en_path,
             cnn_model_path = args.cnn_model_path,
             dict_path = args.dict_en_path,
+            cnn_model_type = args.cnn_model_type,
+            beamsize = args.beamsize,
+            depth_limit = args.depth_limit,
+            gpu_id = args.gpu,
+            first_word = args.first_word,
+            hidden_dim = args.hidden_dim,
+            mean = args.mean)
+
+    ch_model = CaptionGenerator(
+            rnn_model_path = args.rnn_model_ch_path,
+            cnn_model_path = args.cnn_model_path,
+            dict_path = args.dict_ch_path,
             cnn_model_type = args.cnn_model_type,
             beamsize = args.beamsize,
             depth_limit = args.depth_limit,

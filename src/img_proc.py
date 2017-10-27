@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import cv2
 
@@ -15,6 +14,12 @@ class Img_proc(object):
             mean[1] = 116.779
             mean[2] = 123.68
             self.mean = mean
+
+        elif mean_type == 'LRN':
+            pass
+
+        elif mean_type == 'LCN':
+            pass
         
         elif len(mean_type) == 3:
             mean = np.ndarray([3, 244, 244], dtype=np.float32)
