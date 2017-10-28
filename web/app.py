@@ -106,11 +106,11 @@ if __name__=='__main__':
                         help="RNN chinese model path")
     parser.add_argument('--cnn_model_path', '-cm', type=str, default=os.path.join('..', 'data', 'models', 'cnn', 'ResNet50.model'),
                         help="CNN model path")
-    parser.add_argument('--dict_jp_path', '-jd', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
+    parser.add_argument('--dict_jp_path', '-jd', type=str, default=os.path.join('..', 'data', 'vocab_dict', 'dict_STAIR_jp_train.pkl'),
                         help="Japanese Dictionary path")
-    parser.add_argument('--dict_en_path', '-ed', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_MSCOCO_en.pkl'),
+    parser.add_argument('--dict_en_path', '-ed', type=str, default=os.path.join('..', 'data', 'vocab_dict', 'dict_MSCOCO_en_train.pkl'),
                         help="English Dictionary path")
-    parser.add_argument('--dict_ch_path', '-cd', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_MSCOCO_ch_mt.pkl'),
+    parser.add_argument('--dict_ch_path', '-cd', type=str, default=os.path.join('..', 'data', 'vocab_dict', 'dict_MSCOCO_ch_mt.pkl'),
                         help="Chinese Dictionary path")
     parser.add_argument('--cnn_model_type', '-ct', type=str, choices = ['ResNet', 'VGG16', 'AlexNet'], default="ResNet")
     parser.add_argument('--beamsize', '-b', type=str, default=3,

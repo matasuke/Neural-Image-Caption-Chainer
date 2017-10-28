@@ -57,7 +57,7 @@ class CaptionGenerator(object):
 
     def parse_dic(self, dict_path):
         with open(dict_path, 'rb') as f:
-            self.token2index = pickle.load(f)['train']['word_ids']
+            self.token2index = pickle.load(f)
 
         return { v:k for k, v in self.token2index.items() }
 
@@ -154,7 +154,7 @@ if __name__ == "__main__":
                         help="RNN model path")
     parser.add_argument('--cnn_model_path', '-cm', type=str, default=os.path.join('..', 'data', 'models', 'cnn', 'ResNet50.model'),
                         help="CNN model path")
-    parser.add_argument('--dict_path', '-d', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
+    parser.add_argument('--dict_path', '-d', type=str, default=os.path.join('..', 'data', 'vocab_dict', 'dict_STAIR_jp_train.pkl'),
                         help="Dictionary path")
     parser.add_argument('--cnn_model_type', '-ct', type=str, choices=['ResNet', 'VGG16', 'AlexNet'], default="ResNet",
                         help="CNN model type")
