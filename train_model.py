@@ -29,7 +29,7 @@ parser.add_argument('--img_root', '-i', type=str, default="./data/images/origina
                     help="Path to image files root")
 parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/",
                     help="The directory to save model and log")
-parser.add_argument('--preload', '-p', type=bool, default=True,
+parser.add_argument('--preload', '-p', action='store_true',
                     help="preload all image features onto RAM before trainig")
 parser.add_argument('--epoch', type=int, default=100, 
                     help="The number of epoch")
@@ -49,7 +49,7 @@ parser.add_argument('--L2norm', '-l2', type=float, default=1.0,
                     help="L2 norm send to gradientclip")
 parser.add_argument('--load_model', '-lm', type=int, default=0,
                     help="At which epoch you want to restart training(0 means training from zero)")
-parser.add_argument('--slack', '-sl', type=bool, default=False,
+parser.add_argument('--slack', '-sl', action='store_true',
                     help="Notification to slack")
 args = parser.parse_args()
 
@@ -201,10 +201,12 @@ while dataset.now_epoch <= total_epoch:
     iteration += 1
 
     print('epoch: {0} iteration: {1}, loss: {2}, acc: {3}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 10), round(float(acc.data), 10)))
+    
     if now_epoch is not dataset.now_epoch:
         print('new epoch phase')
         mean_loss = sum_loss / caption_size
         mean_acc = sum_acc / caption_size
+
 
         print('\nepoch {0} result'.format(now_epoch-1))
         print('epoch: {0} loss: {1} acc: {2}'.format(now_epoch, round(float(mean_loss), 10), round(float(mean_acc), 10)))

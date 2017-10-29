@@ -1,8 +1,6 @@
 import os
-import json
 import argparse
 import pickle
-import numpy as np
 from numpy import random
 from tqdm import tqdm
 
@@ -16,7 +14,7 @@ class Tokenizer(object):
             self.t = Tokenizer()
             self.segmenter= lambda sentence: list(token.surface for token in self.t.tokenize(sentence))
 
-        elif self.lang == 'cn':
+        elif self.lang == 'ch':
             import jieba
             self.segmenter= lambda sentence: list(jieba.cut(sentence))
 
@@ -25,9 +23,6 @@ class Tokenizer(object):
             self.nltk = nltk
             self.segmenter = lambda sentence: list(nltk.word_tokenize(sentence))
         
-        elif self.lang == 'ch':
-            self.sengment = lambda sentence: list(sentence)
-
     def pre_process(self, caption):
         if self.args.lower:
             caption = caption.strip().lower()
@@ -36,7 +31,7 @@ class Tokenizer(object):
         return self.segmenter(caption)
 
 
-def words2ids(tokens, word_ids):
+def token2index(tokens, word_ids):
     return [ word_ids[token] if token in word_ids else word_ids['<UNK>'] for token in tokens ]
 
 def load_pickle(p_file):
@@ -53,6 +48,9 @@ if __name__ == '__main__':
     parser.add_argument('--input_train', '-it', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted', 'formatted_json_train_jp.pkl'),
                         help="input formatted JSON train file"
     )
+    parser.add_argument('--exist_val', '-ev', action='store_true',
+                        help="exist validation file or not"
+    )
     parser.add_argument('--input_val', '-iv', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted', 'formatted_json_val_jp.pkl'),
                         help="input formatted JSON val file"
     )
@@ -68,10 +66,10 @@ if __name__ == '__main__':
     parser.add_argument('--off', '-o', type=int, default=5,
                         help="min number of word frequency in words dict"
     )
-    parser.add_argument('--lower', '-lw', type=bool, default=True,
+    parser.add_argument('--lower', '-lw', action='store_true',
                         help="lower all of the characters in captions"
     )
-    parser.add_argument('--period', '-p', type=bool, default=True,
+    parser.add_argument('--period', '-p', action='store_true',
                         help="remove periods if captions has it"
     )
     parser.add_argument('--ratio', '-r', type=float, default=0.5,
@@ -82,25 +80,9 @@ if __name__ == '__main__':
     tokenizer = Tokenizer(args)
 
     formatted_train = load_pickle(args.input_train)
-    formatted_val = load_pickle(args.input_val)
-
-    val_img_num = int(len(formatted_val) * args.ratio)
-
-    #validation data and test data
-    for img in tqdm(formatted_val):
-        if 'tokenized_captions' in img:
-            for i, caption in enumerate(img['tokenized_captions']):
-                img['tokenized_captions'][i] = caption.split()
-        else:
-            img['tokenized_captions'] = []
-            for caption in img['captions']:
-                img['tokenized_captions'].append(tokenizer.pre_process(caption))
-
-    random.seed(0)
-    random.shuffle(formatted_val)
-    val_data = formatted_val[:val_img_num]
-    test_data = formatted_val[val_img_num:]
-    train_data = formatted_train
+    
+    if args.exist_val:
+        formatted_val = load_pickle(args.input_val)
 
     img_idx = 0
     caption_idx = 0
@@ -162,13 +144,36 @@ if __name__ == '__main__':
 
     #encoding 
     for caption in tqdm(captions):
-        caption['caption'] = words2ids(caption['caption'], word_ids)
+        caption['caption'] = token2index(caption['caption'], word_ids)
 
+    #validation data and test data
+    if args.exist_val:
+        for img in tqdm(formatted_val):
+            if 'tokenized_captions' in img:
+                for i, caption in enumerate(img['tokenized_captions']):
+                    img['tokenized_captions'][i] = caption.split()
+            else:
+                img['tokenized_captions'] = []
+                for caption in img['captions']:
+                    img['tokenized_captions'].append(tokenizer.pre_process(caption))
+
+            img['tokens'] = []
+            for i, caption in enumerate(img['tokenized_captions']):
+                img['tokens'].append(token2index(caption, word_ids))
+
+        random.seed(0)
+        random.shuffle(formatted_val)
+        val_img_num = int(len(formatted_val) * args.ratio)
+        val_data = formatted_val[:val_img_num]
+        test_data = formatted_val[val_img_num:]
+        
     output_dataset = {}
 
     output_dataset['train'] = {'images': images, 'captions': captions, 'word_ids': word_ids}
-    output_dataset['val'] = val_data
-    output_dataset['test'] = test_data
+    
+    if args.exist_val:
+        output_dataset['val'] = val_data
+        output_dataset['test'] = test_data
 
     output_dict = word_ids
 
