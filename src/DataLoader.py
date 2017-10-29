@@ -12,9 +12,14 @@ class DataLoader:
         self.preload_features = False
         self.img_proc = Img_proc(mean_type=img_mean)
         self.captions = self.train['captions']
+        self.val_captions = len(self.val)
+        self.test_captions = len(self.test)
         self.token2index = self.train['word_ids']
         self.index2token = { v: k for k, v in self.token2index.items() }
+        self.num_tokens = len(self.token2index)
         self.num_captions = len(self.captions)
+        self.val_num_captions = len(self.val_captions)
+        self.test_num_captions = len(self.test_captions)
         self.images = self.train['images']
         self.num_images = len(self.images)
         self.cap2img = { caption['caption_idx']:caption['img_idx'] for caption in self.train['captions'] }
@@ -22,6 +27,7 @@ class DataLoader:
         self.img_root = img_root
         self.random_indices = np.random.permutation(len(self.captions))
         self.index_counter = 0
+        self.val_index_counter = 0
         self.epoch = 1
         self.preload_features = preload_features
         if self.preload_features:
@@ -75,8 +81,17 @@ class DataLoader:
     def shuffle_data(self):
         self.random_indices = np.random.permutation(len(self.captions))
 
-    def get_val(self, raw_img = False, raw_captions=False):
+    def get_val_batch(self, batch_size=248, raw_img=False, raw_captions=False):
+        self.val_index_counter += batch_size
         
+        if self.val_index_counter > self.val_num_captions - batch_size:
+            self.val_index_counter = 0
+
+        if raw_img:
+            val_images = np.array([ self.img_proc.load_img(os.path.join(self.img_root, i['file_path']), expand_dim = False) for i in self.val ])
+            
+    def get_val(self, raw_img = False, raw_captions=False):
+
         if raw_img:
             val_images = np.array([ self.img_proc.load_img(os.path.join(self.img_root, i['file_path']), expand_dim = False) for i in self.val ])
         else:
@@ -95,6 +110,14 @@ class DataLoader:
                 val_captions.append([ np.array(j, dtype=np.int32) for j in i['tokens'] ])
                 
         return val_images, val_captions
+    
+    @property
+    def token2index(self):
+        return self.token2index
+
+    @property
+    def dict_size(self):
+        return self.num_tokens
 
     @property
     def caption_size(self):
@@ -111,6 +134,7 @@ class DataLoader:
     @property
     def is_new_epoch(self):
         pass 
+
 
 
 if __name__ == "__main__":

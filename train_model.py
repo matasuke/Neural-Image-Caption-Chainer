@@ -22,12 +22,13 @@ from slack_notification import post_slack
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g', type=int, default=0,
                     help="set GPU ID (negative value means using CPU)")
-parser.add_argument('--dataset', '-d', type=str, default="./data/captions/processed/dataset_STAIR_jp.pkl",
+parser.add_argument('--dataset', '-d', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
                     help="Path to preprocessed caption pkl file")
-parser.add_argument('--img_feature_root', '-f', type=str, default="./data/images/features/ResNet50/")
-parser.add_argument('--img_root', '-i', type=str, default="./data/images/original/",
+parser.add_argument('--img_feature_root', '-f', type=str, default=os.path.join('data', 'images', 'features', 'ResNet50'),
+                    help="Path to image feature root")
+parser.add_argument('--img_root', '-i', type=str, default=os.path.join('data', 'images', 'original'),
                     help="Path to image files root")
-parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/",
+parser.add_argument('--output_dir', '-od', type=str, default=os.path.join('data', 'train_data'),
                     help="The directory to save model and log")
 parser.add_argument('--preload', '-p', action='store_true',
                     help="preload all image features onto RAM before trainig")
@@ -51,6 +52,8 @@ parser.add_argument('--load_model', '-lm', type=int, default=0,
                     help="At which epoch you want to restart training(0 means training from zero)")
 parser.add_argument('--slack', '-sl', action='store_true',
                     help="Notification to slack")
+parser.add_argument('--validation', '-val', action='store_true',
+                    help="exist validation file and run validation test")
 args = parser.parse_args()
 
 #create save directories
@@ -61,25 +64,18 @@ if not os.path.isdir(args.output_dir):
     os.mkdir(os.path.join(args.output_dir, 'logs'))
     print('making some directories to ', args.output_dir)
 
-
 #data preparation
 print('loading preprocessed data...')
 
 with open(args.dataset, 'rb') as f:
     data = pickle.load(f)
 
-train_data = data['train']
-val_data = data['val']
-test_data = data['test']
-
 #word dictionary
-token2index = train_data['word_ids']
 
-dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.img_root)
+dataset = DataLoader(data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.img_root, exist_test = args.validation)
 
 #model preparation
-model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
-
+model = Image2CaptionDecoder(vocab_size=dataset.dict_size, hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
 
 #cupy settings
 if args.gpu >= 0:
@@ -192,7 +188,6 @@ while dataset.now_epoch <= total_epoch:
     loss.backward()
     #loss.unchain_backward()
     
-    
     #update parameters
     optimizer.update()
 
@@ -206,7 +201,6 @@ while dataset.now_epoch <= total_epoch:
         print('new epoch phase')
         mean_loss = sum_loss / caption_size
         mean_acc = sum_acc / caption_size
-
 
         print('\nepoch {0} result'.format(now_epoch-1))
         print('epoch: {0} loss: {1} acc: {2}'.format(now_epoch, round(float(mean_loss), 10), round(float(mean_acc), 10)))
