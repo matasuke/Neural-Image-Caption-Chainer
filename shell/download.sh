@@ -20,11 +20,11 @@ return_yes_or_no(){
 }
 
 
-echo 'Do you want to download pre-learned models(yes/no)?'
+echo 'Do you want to download pre-trained models? (yes/no)'
 model_download=`return_yes_or_no`
-echo 'Do you want to download images(yes/no)?'
+echo 'Do you want to download images? (yes/no)'
 image_download=`return_yes_or_no`
-echo 'Do you want to download captions(yes/no)?'
+echo 'Do you want to download captions? (yes/no)'
 caption_download=`return_yes_or_no`
 
 echo $model_download
@@ -132,6 +132,21 @@ if [ ! $caption_download ]; then
         wget https://github.com/yahoojapan/YJCaptions/raw/master/yjcaptions26k.zip
         unzip yjcaptions26k
         rm yjcaptions26k.zip
+    fi
+
+    cd ..
+
+    #download machine translated chinese MACOCO captions
+    if [ ! -d MSCOCO_Chinese_translation ]; then
+        mkdir MSCOCO_Chinese_translation
+    fi
+
+    cd MSCOCO_Chinese_translation
+
+    if [ ! -f captions_train2014_cn_translation.json ]; then
+        wget https://github.com/apple2373/mt-mscoco/raw/master/captions_train2014_cn_translation.json.zip
+        unzip captions_train2014_cn_translation.json.zip
+        rm captions_train2014_cn_translation.json.zip
     fi
 
 fi
