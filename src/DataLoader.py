@@ -2,6 +2,9 @@ import numpy as np
 import os
 from img_proc import Img_proc
 
+#get_batch_val doesn't work well when getting batch second times,
+#the size of batch is (0, 2048) not (256, 2048)
+
 
 class DataLoader:
     def __init__(self, dataset, img_feature_root=os.path.join('..', 'data', 'images', 'features', 'ResNet50',), img_root=os.path.join('..', 'data', 'images', 'original'), img_mean="imagenet", preload_features=False, exist_test = True):
@@ -45,8 +48,9 @@ class DataLoader:
         
         if self.preload_features:
             self.img_features_train = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.train_images ])
-            self.img_features_val = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.val_images ])
-            self.img_features_test = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.test_images ])
+            if exist_test:
+                self.img_features_val = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.val_images ])
+                self.img_features_test = np.array([np.load( '{0}.npz'.format(os.path.join(self.img_feature_root, os.path.splitext(image['file_path'])[0])))['arr_0'] for image in self.test_images ])
 
     def get_batch_train(self, batch_size=256, raw_img = False, raw_captions=False):
         batch_caption_indices = self.random_indices[self.train_index_counter: self.train_index_counter + batch_size]
@@ -93,7 +97,7 @@ class DataLoader:
 
 
     def get_batch_val(self, batch_size=256, raw_img = False, raw_captions = False):
-        batch_caption_indices = list(range(self.val_index_counter, batch_size))
+        batch_caption_indices = list(range(self.val_index_counter, batch_size + self.val_index_counter))
         self.val_index_counter += batch_size
     
         if self.val_index_counter > self.num_val_captions -  batch_size:
@@ -116,7 +120,7 @@ class DataLoader:
         return batch_images, batch_word_indices
 
     def get_batch_test(self, batch_size=256, raw_img = False, raw_captions = False):
-        batch_caption_indices = list(range(self.test_index_counter, batch_size))
+        batch_caption_indices = list(range(self.test_index_counter, batch_size + self.test_index_counter))
         self.test_index_counter += batch_size
     
         if self.test_index_counter > self.num_test_captions -  batch_size:

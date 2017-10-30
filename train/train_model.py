@@ -62,6 +62,7 @@ if not os.path.isdir(args.output_dir):
     os.mkdir(os.path.join(args.output_dir, 'models'))
     os.mkdir(os.path.join(args.output_dir, 'optimizers'))
     os.mkdir(os.path.join(args.output_dir, 'logs'))
+    os.mkdir(os.path.join(args.output_dir, 'plots'))
     print('making some directories to ', args.output_dir)
 
 #data preparation
@@ -152,8 +153,8 @@ if not os.path.isdir(output_dir):
     os.mkdir(os.path.join(output_dir, 'optimizers'))
     os.mkdir(os.path.join(output_dir, 'logs'))
     print('making some directories to ', output_dir)
-    with open(os.path.join(output_dir, 'logs', 'logs.txt'), 'a') as f:
-        sen_log_title = 'epoch, train/loss, train/acc, val/loss, val/acc'
+    with open(os.path.join(output_dir, 'logs', 'logs.txt'), 'w') as f:
+        sen_log_title = 'epoch,train/loss,train/acc,val/loss,val/acc'
         f.write(sen_log_title)
 
 # before training
@@ -208,22 +209,23 @@ while dataset.now_epoch <= total_epoch:
         mean_train_loss = train_loss / train_caption_size
         mean_train_acc = train_acc / train_caption_size
         
+        #validation
         dataset.continue_val = True
         while dataset.continue_val:
-            img_batch_val, cap_batch = dataset.get_batch_val(batch_size)
+            img_batch_val, cap_batch_val = dataset.get_batch_val(batch_size)
             
             if args.gpu >= 0:
-                img_batch_val = cuda.to_gpu(img_batch, device=args.gpu)
-                cap_batch_val = [ cuda.to_gpu(x, device=args.gpu) for x in cap_batch]
+                img_batch_val = cuda.to_gpu(img_batch_val, device=args.gpu)
+                cap_batch_val = [ cuda.to_gpu(x, device=args.gpu) for x in cap_batch_val]
         
-            with chainer.using_config('train', False):
-                hx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
-                cx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
-                hx, cx = model.input_cnn_feature(hx, cx, img_batch)
-                loss, acc = model(hx, cx, cap_batch)
+            hx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
+            cx = xp.zeros((num_layers, batch_size, model.hidden_dim), dtype=xp.float32)
+            hx, cx = model.input_cnn_feature(hx, cx, img_batch_val)
+            loss, acc = model(hx, cx, cap_batch_val)
 
-                val_loss = loss.data * batch_size
-                val_acc = acc.data * batch_size
+            val_loss += loss.data * batch_size
+            val_acc += acc.data * batch_size
+        
         mean_val_loss = val_loss / val_caption_size
         mean_val_acc = val_acc / val_caption_size
 
