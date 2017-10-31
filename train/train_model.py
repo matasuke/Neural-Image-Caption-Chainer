@@ -9,27 +9,25 @@ from chainer import cuda
 from chainer.cuda import cupy as cp
 from chainer import optimizers, serializers
 
-sys.path.append('./src')
+sys.path.append('../src')
 from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
 
-import ENV
 from slack_notification import post_slack
-
-#separate dataset and dictionary file to use less memory
-#prepare validation and test data 
+import ENV
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g', type=int, default=0,
                     help="set GPU ID (negative value means using CPU)")
-parser.add_argument('--dataset', '-d', type=str, default="./data/captions/processed/dataset_STAIR_jp.pkl",
+parser.add_argument('--dataset', '-d', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
                     help="Path to preprocessed caption pkl file")
-parser.add_argument('--img_feature_root', '-f', type=str, default="./data/images/features/ResNet50/")
-parser.add_argument('--img_root', '-i', type=str, default="./data/images/original/",
+parser.add_argument('--img_feature_root', '-f', type=str, default=os.path.join('..', 'data', 'images', 'features', 'ResNet50'),
+                    help="Path to image feature root")
+parser.add_argument('--img_root', '-i', type=str, default=os.path.join('.. ', 'data', 'images', 'original'),
                     help="Path to image files root")
-parser.add_argument('--output_dir', '-od', type=str, default="./data/train_data/",
+parser.add_argument('--output_dir', '-od', type=str, default=os.path.join('..', 'data', 'train_data'),
                     help="The directory to save model and log")
-parser.add_argument('--preload', '-p', type=bool, default=True,
+parser.add_argument('--preload', '-p', action='store_true',
                     help="preload all image features onto RAM before trainig")
 parser.add_argument('--epoch', type=int, default=100, 
                     help="The number of epoch")
@@ -49,7 +47,7 @@ parser.add_argument('--L2norm', '-l2', type=float, default=1.0,
                     help="L2 norm send to gradientclip")
 parser.add_argument('--load_model', '-lm', type=int, default=0,
                     help="At which epoch you want to restart training(0 means training from zero)")
-parser.add_argument('--slack', '-sl', type=bool, default=False,
+parser.add_argument('--slack', '-sl', action='store_true',
                     help="Notification to slack")
 args = parser.parse_args()
 
@@ -59,8 +57,8 @@ if not os.path.isdir(args.output_dir):
     os.mkdir(os.path.join(args.output_dir, 'models'))
     os.mkdir(os.path.join(args.output_dir, 'optimizers'))
     os.mkdir(os.path.join(args.output_dir, 'logs'))
+    os.mkdir(os.path.join(args.output_dir, 'plots'))
     print('making some directories to ', args.output_dir)
-
 
 #data preparation
 print('loading preprocessed data...')
@@ -68,18 +66,12 @@ print('loading preprocessed data...')
 with open(args.dataset, 'rb') as f:
     data = pickle.load(f)
 
-train_data = data['train']
-val_data = data['val']
-test_data = data['test']
-
 #word dictionary
-token2index = train_data['word_ids']
 
-dataset = DataLoader(train_data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.img_root)
+dataset = DataLoader(data, img_feature_root=args.img_feature_root, preload_features=args.preload, img_root=args.img_root, exist_test = False)
 
 #model preparation
-model = Image2CaptionDecoder(vocab_size=len(token2index), hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
-
+model = Image2CaptionDecoder(vocab_size=dataset.dict_size, hidden_dim=args.hidden_dim, img_feature_dim=args.img_feature_dim, dropout_ratio=args.dropout_ratio, n_layers=args.n_layers)
 
 #cupy settings
 if args.gpu >= 0:
@@ -115,26 +107,24 @@ elif opt == 'SMORMS3':
 optimizer.setup(model)
 optimizer.add_hook(chainer.optimizer.GradientClipping(grad_clip))
 
-
 # configuration about training
 total_epoch = args.epoch
 batch_size = args.batch_size
-caption_size = dataset.caption_size
-total_iteration = math.ceil(caption_size / batch_size)
-img_size = dataset.img_size
+train_caption_size = dataset.num_train_captions
+total_iteration = math.ceil(train_caption_size / batch_size)
+train_img_size = dataset.num_train_images
 hidden_dim = args.hidden_dim
 num_layers = args.n_layers
-sum_loss = 0
-sum_acc = 0
+train_loss = 0
+train_acc = 0
 iteration = 0
-accuracy = 0
 l2norm = grad_clip
 output_dir = os.path.join(args.output_dir, os.path.splitext(os.path.basename(args.dataset))[0] + '_' + str(batch_size) + '_' + str(opt))
 
 sen_title = '-----configurations-----'
 sen_gpu = 'GPU ID: ' + str(args.gpu)
-sen_img = 'Total images: ' + str(img_size)
-sen_cap = 'Total captions: ' + str(caption_size)
+sen_train_img = 'Total train images: ' + str(train_img_size)
+sen_train_cap = 'Total train captions: ' + str(train_caption_size)
 sen_epoch = 'Total epoch: ' + str(total_epoch)
 sen_batch = 'Batch size: ' + str(batch_size)
 sen_hidden = 'The number of hidden dim: ' + str(hidden_dim)
@@ -143,7 +133,7 @@ sen_optimizer = 'Optimizer: ' + str(opt)
 sen_learnning = 'Learning rate: '
 sen_l2norm = 'L2norm: ' + str(l2norm)
 
-sen_conf = sen_title + '\n' + sen_gpu + '\n' + sen_img + '\n' + sen_cap + '\n' + sen_epoch + '\n' + sen_batch + '\n' + sen_hidden + '\n' + sen_LSTM + '\n' + sen_optimizer + '\n' + sen_l2norm + '\n'
+sen_conf = sen_title + '\n' + sen_gpu + '\n' + sen_train_img + '\n' + sen_train_cap + '\n' + sen_epoch + '\n' + sen_batch + '\n' + sen_hidden + '\n' + sen_LSTM + '\n' + sen_optimizer + '\n' + sen_l2norm + '\n'
 
 #create save directories
 if not os.path.isdir(output_dir):
@@ -152,6 +142,9 @@ if not os.path.isdir(output_dir):
     os.mkdir(os.path.join(output_dir, 'optimizers'))
     os.mkdir(os.path.join(output_dir, 'logs'))
     print('making some directories to ', output_dir)
+    with open(os.path.join(output_dir, 'logs', 'logs.txt'), 'w') as f:
+        sen_log_title = 'epoch,train/loss,train/acc'
+        f.write(sen_log_title)
 
 # before training
 print(sen_conf)
@@ -177,7 +170,7 @@ while dataset.now_epoch <= total_epoch:
     model.cleargrads()
     
     now_epoch = dataset.now_epoch
-    img_batch, cap_batch = dataset.get_batch(batch_size)
+    img_batch, cap_batch = dataset.get_batch_train(batch_size)
     
     if args.gpu >= 0:
         img_batch = cuda.to_gpu(img_batch, device=args.gpu)
@@ -192,29 +185,28 @@ while dataset.now_epoch <= total_epoch:
     loss.backward()
     #loss.unchain_backward()
     
-    
     #update parameters
     optimizer.update()
 
-    sum_loss += loss.data * batch_size
-    sum_acc += acc.data * batch_size
+    train_loss += loss.data * batch_size
+    train_acc += acc.data * batch_size
     iteration += 1
 
     print('epoch: {0} iteration: {1}, loss: {2}, acc: {3}'.format(now_epoch, str(iteration) + '/' + str(total_iteration), round(float(loss.data), 10), round(float(acc.data), 10)))
+    
     if now_epoch is not dataset.now_epoch:
-        print('new epoch phase')
-        mean_loss = sum_loss / caption_size
-        mean_acc = sum_acc / caption_size
-
-        print('\nepoch {0} result'.format(now_epoch-1))
-        print('epoch: {0} loss: {1} acc: {2}'.format(now_epoch, round(float(mean_loss), 10), round(float(mean_acc), 10)))
+        mean_train_loss = train_loss / train_caption_size
+        mean_train_acc = train_acc / train_caption_size
+        
+        print('\nepoch {0} result'.format(now_epoch))
+        print('train_loss: {0} train_acc: {1}'.format(round(float(mean_train_loss), 10), round(float(mean_train_acc), 10)))
         print('\nepoch ', now_epoch)
 
         serializers.save_hdf5(os.path.join(output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)
         serializers.save_hdf5(os.path.join(output_dir, 'optimizers', 'optimizer' + str(now_epoch) + '.model'), optimizer)
         
         with open(os.path.join(output_dir, 'logs', 'logs.txt'), 'a') as f:
-            log_sen = str(now_epoch - 1) + ',' + str(mean_loss) + ',' + str(mean_acc) + '\n'
+            log_sen = str(now_epoch) + ',' + str(mean_train_loss) + ',' + str(mean_train_acc) + '\n'
             f.write(log_sen)
 
         if args.slack:
@@ -222,9 +214,9 @@ while dataset.now_epoch <= total_epoch:
             if name[-1] == '/':
                 name =name[:-1]
             name = os.path.basename(name)
-            text = 'epoch: ' + str(now_epoch-1) + ' loss: ' + str(mean_loss) + ' acc:' + str(mean_acc)
+            text = 'epoch: ' + str(now_epoch) + '\ntrain/loss: ' + str(mean_train_loss) + '\natrain/acc:'
             #ENV.POST_URL is set at ENV.py
             post_slack(ENV.POST_URL, name, text)
-        sum_loss = 0
-        sum_acc = 0
+        train_loss = 0
+        train_acc = 0
         iteration = 0

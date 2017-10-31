@@ -20,18 +20,18 @@ return_yes_or_no(){
 }
 
 
-echo 'Do you want to download pre-learned models(yes/no)?'
+echo 'Do you want to download pre-trained models? (yes/no)'
 model_download=`return_yes_or_no`
-echo 'Do you want to download images(yes/no)?'
+echo 'Do you want to download images? (yes/no)'
 image_download=`return_yes_or_no`
-echo 'Do you want to download captions(yes/no)?'
+echo 'Do you want to download captions? (yes/no)'
 caption_download=`return_yes_or_no`
 
 echo $model_download
 
 if [ ! $model_download ]; then
-    if [ ! -d data/models/cnn -o ! -d data/models/rnn ]; then
-        mkdir --parents data/models/rnn data/models/cnn
+    if [ ! -d ../data/models/cnn -o ! -d data/models/rnn ]; then
+        mkdir --parents ../data/models/rnn data/models/cnn
     fi
 
     cd data/models/cnn
@@ -43,11 +43,11 @@ fi
 if [ ! $image_download ]; then
     echo 'Downloading MS COCO Datasets...\n'
     
-    if [ ! -d data/images/original ]; then
-        mkdir --parents data/images/original
+    if [ ! -d ../data/images/original ]; then
+        mkdir --parents ../data/images/original
     fi
 
-    cd data/images/original
+    cd ../data/images/original
 
     if [ ! -d train2014 ]; then
         curl -O http://images.cocodataset.org/zips/train2014.zip
@@ -90,13 +90,14 @@ if [ ! $caption_download ]; then
 
     #download official captions
     # annotations for test data is not offered
-    if [ ! -d annotations ]; then
+    if [ ! -d MSCOCO_captions_en ]; then
+        mkdir MSCOCO_captions_en
+        cd MSCOCO_captions_en
         curl -#O http://images.cocodataset.org/annotations/annotations_trainval2014.zip
         unzip annotations_trainval2014.zip
         rm annotations_trainval2014.zip
         mv annotations mscoco_official_annotations_en
     fi
-
 
     #download STAIR captions
     if [ ! -d STAIR_Captions ]; then
@@ -131,6 +132,21 @@ if [ ! $caption_download ]; then
         wget https://github.com/yahoojapan/YJCaptions/raw/master/yjcaptions26k.zip
         unzip yjcaptions26k
         rm yjcaptions26k.zip
+    fi
+
+    cd ..
+
+    #download machine translated chinese MACOCO captions
+    if [ ! -d MSCOCO_Chinese_translation ]; then
+        mkdir MSCOCO_Chinese_translation
+    fi
+
+    cd MSCOCO_Chinese_translation
+
+    if [ ! -f captions_train2014_cn_translation.json ]; then
+        wget https://github.com/apple2373/mt-mscoco/raw/master/captions_train2014_cn_translation.json.zip
+        unzip captions_train2014_cn_translation.json.zip
+        rm captions_train2014_cn_translation.json.zip
     fi
 
 fi

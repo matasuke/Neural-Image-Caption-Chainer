@@ -77,7 +77,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='convert MS COCO formatted json to originally formatted ones')
     parser.add_argument('--input_train', '-itr', type=str, default=os.path.join('..', '..', 'data', 'captions', 'original', 'STAIR_Captions', 'stair_captions_v1.1_train.json'),
                         help="input train JSON file path")
-    parser.add_argument('--exist_val', '-ev', type=bool, default=True,
+    parser.add_argument('--exist_val', '-ev', action='store_true',
                         help="Validation file is exist")
     parser.add_argument('--input_val', '-iva', type=str, default=os.path.join('..', '..', 'data', 'captions', 'original', 'STAIR_Captions', 'stair_captions_v1.1_val.json'),
                         help="input val JSON file path")
