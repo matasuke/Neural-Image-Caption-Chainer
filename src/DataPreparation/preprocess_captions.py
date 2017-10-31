@@ -109,6 +109,18 @@ def encode_captions(captions, word_index):
     
     return captions
 
+def make_dataset_bleu(formatted_data, tokenizer):
+    for img in tqdm(formatted_data):
+        if 'tokenized_aptions' in img:
+            for i, caption in enumerate(img['tokenized_captions']):
+                img['tokenized_captions'][i] = caption.split()
+        else:
+            img['tokenized_captions'] = []
+            for caption in img['captions']:
+                img['tokenized_captions'].append(tokenizer.pre_process(caption))
+    
+    return formatted_data
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_train', '-it', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted', 'formatted_json_train_jp.pkl'),
@@ -123,6 +135,8 @@ if __name__ == '__main__':
     parser.add_argument('--output_dataset_path', '-odap', type=str, default=os.path.join('..', '..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
                         help="output file name"
     )
+    parser.add_argument('--output_dataset_bleu_path', '-odb', type=str, default=os.path.join('..', '..', 'data', 'captions', 'blue', 'dataset_STAIR_jp_bleu.pkl'),
+                        help="output dataset path of validation and test data for calculating bleu score")
     parser.add_argument('--output_dict_path', '-odip', type=str, default=os.path.join('..', '..', 'data', 'vocab_dict', 'dcit_STAIR_jp_train.pkl'),
                         help="output file name"
     )
@@ -170,8 +184,16 @@ if __name__ == '__main__':
         output_dataset['val'] = { 'images': val_images, 'captions': val_captions }
         output_dataset['test'] = { 'images': test_images, 'captions': test_captions }
 
+        #bleu
+        dataset_bleu = {}
+        formatted_val = make_dataset_bleu(val_data, tokenizer) 
+        formatted_test = make_dataset_bleu(test_data, tokenizer)
+        output_bleu_data['val'] = formatted_val
+        output_bleu_data['test'] = formatted_test
+
     output_dataset['word_index'] = word_index
     output_dict = word_index
 
     save_pickle(output_dataset, args.output_dataset_path)
     save_pickle(output_dict, args.output_dict_path)
+    save_pickle(output_bleu_data, args.output_dataset_bleu_path)
