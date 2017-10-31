@@ -52,14 +52,8 @@ firstly, you have to download some data using shells/download.sh
 if you don't want to train MSCOCO image datasets by yourself, you just need pre-trained models.
 ```
 sh shells/download.sh
-
->> Do you want to download pre-trained models? (yes/no)
-yes
->> Do you want to download images? (yes/no)
-yes
->> Do you want to download captions? (yes/no)
-yes
 ```
+
 ### Dataset preparation
 
 you alos have to process downloaded data.
