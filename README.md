@@ -29,9 +29,9 @@ Original paper is [Show and Tell: A Neural Image Caption Generator](https://arxi
 all requirement libralies can be installed below this.
 you should use anaconda environment for this repository,
 then execute command below
+if you didn't setup CUDA environment, you should delete cupy==2.0.0 from requirements.txt
 
 ```
-# if you didn't setup CUDA environment, you should delete cupy==2.0.0 from requirements.txt
 pip install -r requirements.txt
 ```
 
