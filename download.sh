@@ -30,9 +30,11 @@ caption_download=`return_yes_or_no`
 echo $model_download
 
 if [ ! $model_download ]; then
-    if [ ! -d models/cnn -o ! -d models/rnn ]; then
-        mkdir --parents models/cnn models/rnn
+    if [ ! -d data/models/cnn -o ! -d data/models/rnn ]; then
+        mkdir --parents data/models/rnn data/models/cnn
     fi
+
+    cd data/models/cnn
 fi
 
 

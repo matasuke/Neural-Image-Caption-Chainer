@@ -50,16 +50,16 @@ def save_pickle(out_data, p_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_train', '-it', type=str, default="../../data/captions/converted/formatted_json_train_jp.pkl",
+    parser.add_argument('--input_train', '-it', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted', 'formatted_json_train_jp.pkl'),
                         help="input formatted JSON train file"
     )
-    parser.add_argument('--input_val', '-iv', type=str, default="../../data/captions/converted/formatted_json_val_jp.pkl",
+    parser.add_argument('--input_val', '-iv', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted', 'formatted_json_val_jp.pkl'),
                         help="input formatted JSON val file"
     )
-    parser.add_argument('--out_dir', '-od', type=str, default="../../data/captions/processed",
-                        help="output dir"
+    parser.add_argument('--output_dataset_path', '-odap', type=str, default=os.path.join('..', '..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
+                        help="output file name"
     )
-    parser.add_argument('--out_file', '-of', type=str, default="dataset_STAIR_jp.pkl",
+    parser.add_argument('--output_dict_path', '-odip', type=str, default=os.path.join('..', '..', 'data', 'vocab_dict', 'dcit_STAIR_jp_train.pkl'),
                         help="output file name"
     )
     parser.add_argument('--lang', '-l', type=str, choices=['jp', 'cn', 'en', 'ch'], default="jp",
@@ -122,8 +122,6 @@ if __name__ == '__main__':
                 caption_tokens.append('</S>')
                 captions.append({'img_idx': img_idx, 'caption': caption_tokens, 'caption_idx': caption_idx})
                 caption_idx += 1
-            #del img['captions']
-            #del img['tokenized_captions']
             images.append({'file_path': img['file_path'], 'img_idx': img_idx})
             img_idx += 1
 
@@ -134,8 +132,6 @@ if __name__ == '__main__':
                 caption_tokens.append('</S>')
                 captions.append({'img_idx': img_idx, 'caption': caption_tokens, 'caption_idx': caption_idx})
                 caption_idx += 1
-            #del img['captions']
-            #del img['tokenized_captions']
             images.append({'file_path': img['file_path'], 'img_idx': img_idx})
             img_idx += 1
     
@@ -167,14 +163,15 @@ if __name__ == '__main__':
     #encoding 
     for caption in tqdm(captions):
         caption['caption'] = words2ids(caption['caption'], word_ids)
-        #caption['encoded_tokenized_caption'] = words2ids(caption['caption'], word_ids)
 
     output_dataset = {}
+
     output_dataset['train'] = {'images': images, 'captions': captions, 'word_ids': word_ids}
     output_dataset['val'] = val_data
     output_dataset['test'] = test_data
 
-    #val and test data is not pre processed completely
+    output_dict = word_ids
 
-    output_path = os.path.join(args.out_dir, args.out_file)
-    save_pickle(output_dataset, output_path)
+    #val and test data is not pre processed completely
+    save_pickle(output_dataset, args.output_dataset_path)
+    save_pickle(output_dict, args.output_dict_path)

@@ -1,3 +1,4 @@
+import os
 import sys
 import numpy as np
 import pickle
@@ -56,12 +57,12 @@ class CaptionGenerator(object):
 
     def parse_dic(self, dict_path):
         with open(dict_path, 'rb') as f:
-            self.token2index = pickle.load(f)['train']['word_ids']
+            self.token2index = pickle.load(f)
 
         return { v:k for k, v in self.token2index.items() }
 
     def successor(self, current_state):
-        word=[xp.array([current_state["path"][-1]],dtype=xp.int32)]
+        word=[xp.array([current_state["token"][-1]], dtype=xp.int32)]
         hx = current_state['hidden']
         cx = current_state['cell']
     
@@ -77,7 +78,7 @@ class CaptionGenerator(object):
                     {
                         "hidden": hy,
                         "cell": cy,
-                        "path": deepcopy(current_state['path']) + [next_word_idx],
+                        "token": deepcopy(current_state['token']) + [next_word_idx],
                         "cost": current_state['cost'] - xp.log(word_dist[next_word_idx])
                     }
                 )
@@ -85,11 +86,11 @@ class CaptionGenerator(object):
 
         return hy, cy, k_best_next_sentences
 
-    def beam_search(self, initial_state):
+    def beam_search(self, init_state):
         
-        found_paths = []
-        top_k_states = [initial_state]
-        while (len(found_paths) < self.beamsize):
+        found_tokens = []
+        top_k_states = [init_state]
+        while (len(found_tokens) < self.beamsize):
             new_top_k_states = []
             for state in top_k_states:
                 hy, cy, k_best_next_states = self.successor(state)
@@ -99,16 +100,12 @@ class CaptionGenerator(object):
 
             top_k_states=[]
             for state in selected_top_k_states:
-                if state['path'][-1] == self.token2index['</S>'] or len(state['path']) == self.depth_limit:
-                    found_paths.append(state)
+                if state['token'][-1] == self.token2index['</S>'] or len(state['token']) == self.depth_limit:
+                    found_tokens.append(state)
                 else:
                     top_k_states.append(state)
 
-        return sorted(found_paths, key=lambda x: x['cost'])
-
-    def generate(self, img_file_path):
-        img = self.img_proc.load_img(img_file_path)
-        return self.generate_from_img(img)
+        return sorted(found_tokens, key=lambda x: x['cost'])
 
     def generate_from_img_feature(self, img_feature):
         if self.gpu_id >= 0:
@@ -121,18 +118,18 @@ class CaptionGenerator(object):
         with chainer.using_config('train', False):
             hy, cy = self.rnn_model.input_cnn_feature(hx, cx, img_feature)
 
-        initial_state = {
+        init_state = {
                 "hidden": hy,
                 "cell": cy,
-                "path": [self.token2index[self.first_word]],
+                "token": [self.token2index[self.first_word]],
                 "cost": 0,
                 }
 
-        captions = self.beam_search(initial_state)
+        captions = self.beam_search(init_state)
 
         caption_candidates = []
         for caption in captions:
-            sentence = [self.index2token[word_idx] for word_idx in caption['path']]
+            sentence = [self.index2token[word_index] for word_index in caption['token']]
             log_likelihood = -float(caption['cost']) #negative log likelihood
             caption_candidates.append({'sentence': sentence, 'log_likelihood': log_likelihood})
 
@@ -145,15 +142,19 @@ class CaptionGenerator(object):
             img_feature = self.cnn_model(img_array, 'feature').data.reshape(1, 1, 2048)
 
         return self.generate_from_img_feature(img_feature)
+    
+    def generate(self, img_path):
+        img = self.img_proc.load_img(img_path)
+        return self.generate_from_img(img)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rnn_model_path', '-rm', type=str, default="../data/models/rnn/caption_model_STAIR.model",
+    parser.add_argument('--rnn_model_path', '-rm', type=str, default=os.path.join('..', 'data', 'models', 'rnn', 'STAIR_jp_256_Adam.model'),
                         help="RNN model path")
-    parser.add_argument('--cnn_model_path', '-cm', type=str, default="../data/models/cnn/ResNet50.model",
+    parser.add_argument('--cnn_model_path', '-cm', type=str, default=os.path.join('..', 'data', 'models', 'cnn', 'ResNet50.model'),
                         help="CNN model path")
-    parser.add_argument('--dict_path', '-d', type=str, default="../data/captions/processed/dataset_STAIR_jp.pkl",
+    parser.add_argument('--dict_path', '-d', type=str, default=os.path.join('..', 'data', 'vocab_dict', 'dict_STAIR_jp_train.pkl'),
                         help="Dictionary path")
     parser.add_argument('--cnn_model_type', '-ct', type=str, choices=['ResNet', 'VGG16', 'AlexNet'], default="ResNet",
                         help="CNN model type")
@@ -169,7 +170,7 @@ if __name__ == "__main__":
                         help="dimension of hidden layers")
     parser.add_argument('--mean', '-m', type=str, choices=['imagenet'], default='imagenet',
                         help="method to preproces images")
-    parser.add_argument('--img', '-i', type=str, default='../sample_imgs/sample_img2.jpg',
+    parser.add_argument('--img', '-i', type=str, default=os.path.join('..', 'sample_imgs', 'sample_img2.jpg'),
                         help="path to test image (default is set as sample_img1.jpg)")
     args = parser.parse_args()
     
@@ -193,27 +194,7 @@ if __name__ == "__main__":
             mean=args.mean
         )
 
-    '''
-    batch size is set as 1
-    I'll fix it later
-    '''
-
-    '''
-    batch_size = 1
-    hx=xp.zeros((caption_generator.rnn_model.n_layers, batch_size, caption_generator.rnn_model.hidden_dim), dtype=xp.float32)
-    cx=xp.zeros((caption_generator.rnn_model.n_layers, batch_size, caption_generator.rnn_model.hidden_dim), dtype=xp.float32)
-    img=caption_generator.image_loader.load("../sample_imgs/COCO_val2014_000000185546.jpg")
-    image_feature=caption_generator.cnn_model(img, "feature").data.reshape(1,1,2048))
-
-    hy,cy = caption_generator.rnn_model.input_cnn_feature(hx, cx, img_feature)
-    initial_state = {
-            "hidden": hy,
-            "cell": cy,
-            "path": [caption_generator.token2index['<S>']]
-            "cost": 0
-        }
-
-    '''
+    
     captions = caption_generator.generate(args.img)
     for i, caption in enumerate(captions):
         print('caption{0}: {1}'.format(i, caption['sentence']))
