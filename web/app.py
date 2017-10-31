@@ -83,10 +83,12 @@ def return_captions():
                 img = request.files['file']
 
         img = request.files['file']
-    if img and allowed_file(img.filename):
+    if img:
         filename = secure_filename(img.filename)
         img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         img.save(img_path)
+    else:
+        return 'error'
 
     output = {}
     jp_captions = jp_model.generate(img_path)
