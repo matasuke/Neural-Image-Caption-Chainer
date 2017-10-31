@@ -48,11 +48,10 @@ pip install -r requirements.txt
 ## USAGE
 
 ### Download dataset.
-firstly, you have to download some data using shell/download.sh
+firstly, you have to download some data using shells/download.sh
 if you don't want to train MSCOCO image datasets by yourself, you just need pre-trained models.
 ```
-cd shell
-sh download.sh
+sh shells/download.sh
 
 >> Do you want to download pre-trained models? (yes/no)
 yes
@@ -66,41 +65,38 @@ yes
 you alos have to process downloaded data.
 if you process all language captions, you just need to execute below this
 ```
-cd shell
-sh process_dataset.sh
+sh shells/process_dataset.sh
 ```
 
 ### Generate captions using pre-trained models
 
 ```
-cd src
-
 #if you don't use GPU set --gpu -1
 #Generate Japanese captions
-python CaptionGenerator.py \
---rnn_model_path ../data/models/rnn/STAIR_jp_256_Adam.model \
---cnn_model_path ../data/models/cnn/ResNet50.model \
---dict_path ../data/vocab_dict/dict_STAIR_jp_train.pkl \
+python src/CaptionGenerator.py \
+--rnn_model_path data/models/rnn/STAIR_jp_256_Adam.model \
+--cnn_model_path data/models/cnn/ResNet50.model \
+--dict_path data/vocab_dict/dict_STAIR_jp_train.pkl \
 --cnn_model_type ResNet \
 --beamsize 3 \
 --gpu 0 \
 --img ../sample_img1.jpg
 
 #Generate English captions
-python CaptionGenerator.py \
---rnn_model_path ../data/models/rnn/MSCOCO_en_256_Adam.model \
---cnn_model_path ../data/models/cnn/ResNet50.model \
---dict_path ../data/vocab_dict/dict_MSCOCO_en_train.pkl \
+python src/CaptionGenerator.py \
+--rnn_model_path data/models/rnn/MSCOCO_en_256_Adam.model \
+--cnn_model_path data/models/cnn/ResNet50.model \
+--dict_path data/vocab_dict/dict_MSCOCO_en_train.pkl \
 --cnn_model_type ResNet \
 --beamsize 3 \
 --gpu 0 \
 --img ../sample_img1.jpg
 
 #Generate Chinese captions
-python CaptionGenerator.py \
---rnn_model_path ../data/models/rnn/MSCOCO_ch_mt_256_Adam.model \
---cnn_model_path ../data/models/cnn/ResNet50.model \
---dict_path ../data/vocab_dict/dict_MSCOCO_ch_mt_train.pkl \
+python src/CaptionGenerator.py \
+--rnn_model_path data/models/rnn/MSCOCO_ch_mt_256_Adam.model \
+--cnn_model_path data/models/cnn/ResNet50.model \
+--dict_path data/vocab_dict/dict_MSCOCO_ch_mt_train.pkl \
 --cnn_model_type ResNet \
 --beamsize 3 \
 --gpu 0 \
@@ -110,41 +106,32 @@ python CaptionGenerator.py \
 ### Generate captions as web app
 Web application for generating captions of English, Japanese and Chinese.
 You can start-up web application like this.
+
 ```
-cd web
-python app.py \
---rnn_model_jp_path ../data/models/rnn/STAIR_jp_256_Adam.model \
---rnn_model_en_path ../data/models/rnn/MSCOCO_en_256__Adam.model \
---rnn_model_ch_path ../data/models/rnn/MSCOCO_ch_mt_256_Adam.model \
---cnn_model_path ../data/models/cnn/ResNet50.model \
---dict_jp_path ../data/dict_STAIR_jp_train.pkl \
---dict_en_path ../data/dict_MSCOCO_en_train.pkl \
---dict_ch_path ../data/dict_MSCOCO_ch_mt.pkl \
---cnn_model_type ResNet \
---gpu 0
+sh shells/app.sh
 ```
 then, you just need to access to localhost:5000
 
 ### train dataset by yourself.
-training examples are listed on shell/all_trains.sh.
+training examples are listed on shells/all_trains.sh.
 if you want to run train/train_model.py with your won settings, you can check the options just by python train/train_model.py --h
 
 #### For STAIR Japanese captions
 
 ```
-sh shell/train_STAIR.sh
+sh shells/train_STAIR.sh
 ```
 
 #### For MSCOCO English captions
 
 ```
-sh shell/train_MSCOCO_en.sh
+sh shells/train_MSCOCO_en.sh
 ```
 
 #### For MSCOCO Chinese translated captions
 
 ```
-sh shell/train_MSCOCO_ch.sh
+sh shells/train_MSCOCO_ch.sh
 ```
 
 ### train your own data

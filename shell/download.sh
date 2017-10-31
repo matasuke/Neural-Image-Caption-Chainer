@@ -30,8 +30,8 @@ caption_download=`return_yes_or_no`
 echo $model_download
 
 if [ ! $model_download ]; then
-    if [ ! -d ../data/models/cnn -o ! -d data/models/rnn ]; then
-        mkdir --parents ../data/models/rnn data/models/cnn
+    if [ ! -d data/models/cnn -o ! -d data/models/rnn ]; then
+        mkdir --parents data/models/rnn data/models/cnn
     fi
 
     cd data/models/cnn
@@ -43,11 +43,11 @@ fi
 if [ ! $image_download ]; then
     echo 'Downloading MS COCO Datasets...\n'
     
-    if [ ! -d ../data/images/original ]; then
-        mkdir --parents ../data/images/original
+    if [ ! -d data/images/original ]; then
+        mkdir --parents data/images/original
     fi
 
-    cd ../data/images/original
+    cd data/images/original
 
     if [ ! -d train2014 ]; then
         curl -O http://images.cocodataset.org/zips/train2014.zip
