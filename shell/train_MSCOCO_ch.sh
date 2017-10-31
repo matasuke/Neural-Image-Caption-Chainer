@@ -1,5 +1,5 @@
 # train chinese caption
-python ./train/train_model.py \
+python ../train/train_model.py \
     --gpu 0 \
     --dataset ../data/captions/processed/dataset_MSCOCO_ch_mt.pkl \
     --img_feature_root ../data/images/features/ResNet50/ \
@@ -14,6 +14,3 @@ python ./train/train_model.py \
     --dropout_ratio 0.5 \
     --n_layers 1 \
     --L2norm 1.0 \
-    --validation
-
-

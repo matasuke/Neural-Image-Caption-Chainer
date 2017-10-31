@@ -14,5 +14,3 @@ python ../train/train_model.py \
     --dropout_ratio 0.5 \
     --n_layers 1 \
     --L2norm 1.0 \
-    --validation
-
