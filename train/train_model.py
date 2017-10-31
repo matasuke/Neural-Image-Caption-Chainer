@@ -199,7 +199,7 @@ while dataset.now_epoch <= total_epoch:
         mean_train_acc = train_acc / train_caption_size
         
         print('\nepoch {0} result'.format(now_epoch))
-        print('train_loss: {0} train_acc: {1} val_loss: {2} val_acc: {3}'.format(round(float(mean_train_loss), 10), round(float(mean_train_acc), 10)))
+        print('train_loss: {0} train_acc: {1}'.format(round(float(mean_train_loss), 10), round(float(mean_train_acc), 10)))
         print('\nepoch ', now_epoch)
 
         serializers.save_hdf5(os.path.join(output_dir, 'models', 'caption_model' + str(now_epoch) + '.model'), model)
