@@ -188,12 +188,12 @@ if __name__ == '__main__':
         dataset_bleu = {}
         formatted_val = make_dataset_bleu(val_data, tokenizer) 
         formatted_test = make_dataset_bleu(test_data, tokenizer)
-        output_bleu_data['val'] = formatted_val
-        output_bleu_data['test'] = formatted_test
+        dataset_bleu['val'] = formatted_val
+        dataset_bleu['test'] = formatted_test
 
     output_dataset['word_index'] = word_index
     output_dict = word_index
 
     save_pickle(output_dataset, args.output_dataset_path)
     save_pickle(output_dict, args.output_dict_path)
-    save_pickle(output_bleu_data, args.output_dataset_bleu_path)
+    save_pickle(dataset_bleu, args.output_dataset_bleu_path)
