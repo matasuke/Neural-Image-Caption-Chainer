@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
 
-
 parser = argparse.ArgumentParser(description="plot loss and acc of train and validation result")
 parser.add_argument('--input_jp_path', '-ij', type=str, default=os.path.join('..', 'data', 'train_data', 'dataset_STAIR_jp_256_Adam', 'logs', 'logs.txt'),
                     help="input japanese log file")

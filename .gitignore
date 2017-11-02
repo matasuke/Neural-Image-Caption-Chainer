@@ -129,3 +129,5 @@ ENV.py
 
 #sample images
 !/sample_imgs
+!loss.png
+!acc.png
