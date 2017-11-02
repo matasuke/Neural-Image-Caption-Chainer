@@ -137,7 +137,11 @@ sh shells/train_MSCOCO_ch.sh
 ```
 
 ### train your own data
+You just need to create json files that is exactly same form of MSCOCO caption datasets.
 
+```
+[{ "file_path": "path/to/img.jpg", "captions": ["caption1", 'caption2' ...]}, ...]
+```
 
 ## Experiments
 
@@ -145,5 +149,30 @@ sh shells/train_MSCOCO_ch.sh
 -  experiments
 -  prepare datas of multi languages using google cloud platfor api.
 -  implement caption model using Bokete(create humor caption model)
+-  add parser to create converted json file from your own data.
 
 ## Citations
+
+```
+@article{DBLP:journals/corr/XuBKCCSZB15,
+  author    = {Kelvin Xu and
+               Jimmy Ba and
+               Ryan Kiros and
+               Kyunghyun Cho and
+               Aaron C. Courville and
+               Ruslan Salakhutdinov and
+               Richard S. Zemel and
+               Yoshua Bengio},
+  title     = {Show, Attend and Tell: Neural Image Caption Generation with Visual
+               Attention},
+  journal   = {CoRR},
+  volume    = {abs/1502.03044},
+  year      = {2015},
+  url       = {http://arxiv.org/abs/1502.03044},
+  archivePrefix = {arXiv},
+  eprint    = {1502.03044},
+  timestamp = {Wed, 07 Jun 2017 14:43:05 +0200},
+  biburl    = {http://dblp.org/rec/bib/journals/corr/XuBKCCSZB15},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+```
