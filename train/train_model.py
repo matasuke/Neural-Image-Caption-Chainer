@@ -9,12 +9,14 @@ from chainer import cuda
 from chainer.cuda import cupy as cp
 from chainer import optimizers, serializers
 
-sys.path.append('../src')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../src')
 from Image2CaptionDecoder import Image2CaptionDecoder
 from DataLoader import DataLoader
 
 from slack_notification import post_slack
-import ENV
+
+if os.path.isfile('ENV.py'):
+    import ENV
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g', type=int, default=0,

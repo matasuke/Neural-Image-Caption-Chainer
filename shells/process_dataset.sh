@@ -1,3 +1,5 @@
+#!bin/sh
+
 # prepare Japanese data
 echo 'Process Japanese captions'
 python src/DataPreparation/preprocess_mscoco2converted.py --input_train data/captions/original/STAIR_captions/stair_captions_v1.1_train.json --exist_val --input_val data/captions/original/STAIR_captions/stair_captions_v1.1_val.json --output_dir data/captions/converted/ --output_train formatted_json_train_jp.pkl --output_val formatted_json_val_jp.pkl

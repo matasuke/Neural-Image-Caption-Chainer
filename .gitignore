@@ -126,3 +126,6 @@ ENV/
 
 #env
 ENV.py
+
+#sample images
+!/sample_imgs

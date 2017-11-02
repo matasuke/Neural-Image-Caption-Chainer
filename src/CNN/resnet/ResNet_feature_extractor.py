@@ -5,7 +5,7 @@ import chainer
 from chainer import cuda
 from chainer import serializers
 from ResNet50 import ResNet
-sys.path.append('../..')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../')
 from img_proc import Img_proc
 import argparse
 

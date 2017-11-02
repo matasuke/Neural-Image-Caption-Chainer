@@ -1,3 +1,4 @@
+#!bin/sh
 python web/app.py \
     --rnn_model_jp_path ../data/models/rnn/STAIR_jp_256_Adam.model \
     --rnn_model_en_path ../data/models/rnn/MSCOCO_en_256_Adam.model \

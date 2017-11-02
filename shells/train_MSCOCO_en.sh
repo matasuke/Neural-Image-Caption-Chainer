@@ -1,3 +1,5 @@
+#!bin/sh
+
 # train english caption
 python train/train_model.py \
     --gpu 0 \

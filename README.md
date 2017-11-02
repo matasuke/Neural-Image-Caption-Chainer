@@ -62,6 +62,14 @@ if you process all language captions, you just need to execute below this
 sh shells/process_dataset.sh
 ```
 
+### extract features from images for yourself.
+If you downloaded image features, you don't need to create features,
+but if you want to create features for yourself, you just need execute the command below.
+
+```
+sh shells/create_features.sh
+```
+
 ### Generate captions using pre-trained models
 
 ```
