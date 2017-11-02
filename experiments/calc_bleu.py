@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 sys.path.append('../src')
+from DataLoader import DataLoader
 from CaptionGenerator import CaptionGenerator
 
 if __name__ == '__main__':
@@ -9,7 +10,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_feature_dir', '-id', type=str, default=os.path.join('..', 'data', 'images', 'features', 'ResNet50', 'val2014'),
                         help="image feature dir")
-    parser.add_argument('--val_path', '-vp', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
+    parser.add_argument('--dataset_path', '-vp', type=str, default=os.path.join('..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
                         help="processed validation caption path")
     parser.add_argument('--rnn_model_path', '-rmp', type=str, default=os.path.join('..', 'data', 'models', 'rnn', 'STAIR_jp_256_Adam.model'),
                         help="RNN model path")
@@ -33,6 +34,8 @@ if __name__ == '__main__':
                         help="dimension of hidden layers")
     parser.add_argument('--mean', '-m', type=str, choices=['imagenet'], default="imagenet",
                         help="method to preprocess images")
+    parser.add_argument('--preload', '-p', type='stor_true',
+                        help="preload image features")
     args = parser.parse_args()
    
     caption_generator = CaptionGenerator(
@@ -47,5 +50,7 @@ if __name__ == '__main__':
             hidden_dim = args.hidden_dim,
             mean = args.mean)
 
-    
+    data = DataLoader(args.dataset_path, img_feature_root=args.image_feature_dir, img_mean=args.mean, preload_features=args.preload, exit_test=True)
+
+
     caption_generator.generate_from_img_feature()
