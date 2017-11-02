@@ -35,12 +35,10 @@ class CaptionGenerator(object):
             self.cnn_model = AlexNet()
 
         serializers.load_hdf5(cnn_model_path, self.cnn_model)
-        self.cnn_model.train = False
 
         self.rnn_model = Image2CaptionDecoder(len(self.token2index), hidden_dim=hidden_dim)
         if len(rnn_model_path) > 0:
             serializers.load_hdf5(rnn_model_path, self.rnn_model)
-        self.rnn_model.train = False
 
         self.first_word = first_word
         
@@ -180,7 +178,6 @@ if __name__ == "__main__":
     now it can't be used. you can just use dataset.pkl file, which contains word2ids.
     '''
 
-    xp = np
     caption_generator = CaptionGenerator(
             rnn_model_path = args.rnn_model_path,
             cnn_model_path = args.cnn_model_path,

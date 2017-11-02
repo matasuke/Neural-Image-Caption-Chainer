@@ -23,6 +23,11 @@ class Tokenizer(object):
             self.nltk = nltk
             self.segmenter = lambda sentence: list(nltk.word_tokenize(sentence))
         
+        elif self.lang == 'ko':
+            from konlpy.tag import Kkma
+            self.kkma = Kkma()
+            self.segmenter = lambda sentence: list(self.kkma.morphs(sentence))
+
     def pre_process(self, caption):
         if self.args.lower:
             caption = caption.strip().lower()
