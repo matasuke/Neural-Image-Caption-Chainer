@@ -146,8 +146,8 @@ You just need to create json files that is exactly same form of MSCOCO caption d
 ## Experiments
 Training results of Japanese, English, Chinese captions.
 
-<img src="./experiments/loss.png">
-<img src="./experiments/acc.png">
+<img src="./images/loss.png">
+<img src="./images/acc.png">
 
 ## Next to do
 -  experiments
