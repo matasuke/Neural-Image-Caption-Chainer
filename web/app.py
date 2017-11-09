@@ -8,8 +8,8 @@ import numpy as np
 import base64
 from chainer import serializers
 from json import dumps
-sys.path.append('../src')
-sys.path.append('../src/CNN')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../src/')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../src/CNN')
 from CaptionGenerator import CaptionGenerator
 sys.path.append('..')
 import WEB_ENV

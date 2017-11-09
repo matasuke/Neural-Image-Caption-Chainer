@@ -9,7 +9,7 @@ from img_proc import Img_proc
 from ResNet50 import ResNet
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--img', '-i', type=str, default="../../../sample_imgs/sample_img1.jpg", 
+parser.add_argument('--img', '-i', type=str, default="../../../sample_imgs/COCO_test2014_000000160008.jpg", 
                     help="image you want to predict")
 parser.add_argument('--model', '-m', type=str, default="../../../data/models/cnn/ResNet50.model",
                     help="model path you want to use")

@@ -23,7 +23,7 @@ class Tokenizer(object):
             self.nltk = nltk
             self.segmenter = lambda sentence: list(nltk.word_tokenize(sentence))
         
-        elif self.lang == 'ko':
+        elif self.lang == 'kr':
             from konlpy.tag import Kkma
             self.kkma = Kkma()
             self.segmenter = lambda sentence: list(self.kkma.morphs(sentence))
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_dict_path', '-odip', type=str, default=os.path.join('..', '..', 'data', 'vocab_dict', 'dcit_STAIR_jp_train.pkl'),
                         help="output file name"
     )
-    parser.add_argument('--lang', '-l', type=str, choices=['jp', 'cn', 'en', 'ch'], default="jp",
+    parser.add_argument('--lang', '-l', type=str, choices=['jp', 'en', 'ch', 'kr'], default="jp",
                         help="dataset language you want to analyze"
     )
     parser.add_argument('--off', '-o', type=int, default=5,
