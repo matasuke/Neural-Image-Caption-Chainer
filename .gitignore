@@ -121,9 +121,6 @@ ENV/
 #json
 *.json
 
-#txt
-*.txt
-
 #env
 ENV.py
 

@@ -1,0 +1,10 @@
+-----configurations-----
+GPU ID: 0
+Total train images: 82783
+Total train captions: 413960
+Total epoch: 100
+Batch size: 256
+The number of hidden dim: 512
+The number of LSTM layers: 1
+Optimizer: Adam
+L2norm: 1.0

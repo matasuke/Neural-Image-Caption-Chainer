@@ -1,5 +1,7 @@
 import sys
+import os
 import argparse
+import numpy as np
 import chainer
 import chainer.functions as F
 from chainer import cuda
@@ -9,9 +11,9 @@ from img_proc import Img_proc
 from ResNet50 import ResNet
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--img', '-i', type=str, default="../../../sample_imgs/COCO_test2014_000000160008.jpg", 
+parser.add_argument('--img', '-i', type=str, default=os.path.join('..', '..', '..', 'sample_imgs', 'COCO_test2014_000000160008.jpg'),
                     help="image you want to predict")
-parser.add_argument('--model', '-m', type=str, default="../../../data/models/cnn/ResNet50.model",
+parser.add_argument('--model', '-m', type=str, default=os.path.join('..', '..', '..', 'data', 'models', 'cnn', 'ResNet50.model'),
                     help="model path you want to use")
 parser.add_argument('--gpu', '-g', type=int, default=-1,
                     help="GPU ID(put -1 if you don't use gpu)")
@@ -38,10 +40,14 @@ if args.gpu >= 0:
 
 #predict
 with chainer.using_config('train', False):
-    res = model(img, None)
-    pred = F.softmax(res).data
+    pred = model(img, None).data
 
 if args.gpu >= 0:
     pred = cuda.to_cpu(pred)
 
-print(pred)
+#results
+with open('synset_words.txt', 'r') as f:
+    synsets = f.read().split('\n')[:-1]
+
+for i in np.argsort(pred)[0][-1::-1][:5]:
+    print(synsets[i], pred[0][1])
