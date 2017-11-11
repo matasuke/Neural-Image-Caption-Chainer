@@ -128,3 +128,7 @@ ENV.py
 !/sample_imgs
 !loss.png
 !acc.png
+
+#txt
+logs.txt
+configurations.txt
