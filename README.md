@@ -8,6 +8,10 @@ Original paper is [Show and Tell: A Neural Image Caption Generator](https://arxi
 
 ## Example
 
+<img src="./images/nic_example1.png">
+<img src="./images/nic_example2.png">
+<img src="./images/nic_example3.png">
+
 ## Language Availability
 - prepared languages in this repository are below this
     + English
