@@ -128,6 +128,9 @@ ENV.py
 !/sample_imgs
 !loss.png
 !acc.png
+!nic_example1.png
+!nic_example2.png
+!nic_example3.png
 
 #txt
 logs.txt
