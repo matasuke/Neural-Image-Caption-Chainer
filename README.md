@@ -147,11 +147,6 @@ You just need to create json files that is exactly same form of MSCOCO caption d
 [{ "file_path": "path/to/img.jpg", "captions": ["caption1", 'caption2' ...]}, ...]
 ```
 
-## Experiments
-Training results of Japanese, English, Chinese captions.
-
-<img src="./images/loss.png"><img src="./images/acc.png">
-
 ## Next to do
 -  experiments
 -  prepare datas of multi languages using google cloud platfor api.
