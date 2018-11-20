@@ -1,6 +1,6 @@
+from pathlib import Path
 import json
 import pickle
-import os
 import argparse
 from tqdm import tqdm
 
@@ -19,7 +19,7 @@ python preprocess_mscoco2convert.py \
 def read_mscoco(json_file):
     with open(json_file) as f:
         dataset = json.load(f)
-    
+
     annots = dataset['annotations']
     imgs = dataset['images']
 
@@ -31,10 +31,10 @@ def save_mscoco(out_data, pickle_file):
 
 def make_groups(annots):
     itoa = {}
-    
+
     for a in tqdm(annots):
         img_id = a['image_id']
-        if not img_id in itoa:
+        if not (img_id in itoa):
             itoa[img_id] = []
         itoa[img_id].append(a)
 
@@ -50,9 +50,9 @@ def create_converted(itoa, imgs):
         data_type = 'train2014' if 'train' in img['file_name'] else 'val2014'
 
         pairs = {}
-        pairs['file_path'] = os.path.join(data_type, img['file_name'])
+        pairs['file_path'] = Path(data_type) / img['file_name']
         pairs['id'] = img_id
-    
+
         sentences = []
         annots = itoa[img_id]
 
@@ -64,7 +64,7 @@ def create_converted(itoa, imgs):
             sentences.append(a['caption'])
             if token:
                 tokenized.append(a['tokenized_caption'])
-       
+
         pairs['captions'] = sentences
         if token:
             pairs['tokenized_captions'] = tokenized
@@ -73,33 +73,57 @@ def create_converted(itoa, imgs):
 
     return out_data
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='convert MS COCO formatted json to originally formatted ones')
-    parser.add_argument('--input_train', '-itr', type=str, default=os.path.join('..', '..', 'data', 'captions', 'original', 'STAIR_Captions', 'stair_captions_v1.1_train.json'),
-                        help="input train JSON file path")
-    parser.add_argument('--exist_val', '-ev', action='store_true',
-                        help="Validation file is exist")
-    parser.add_argument('--input_val', '-iva', type=str, default=os.path.join('..', '..', 'data', 'captions', 'original', 'STAIR_Captions', 'stair_captions_v1.1_val.json'),
-                        help="input val JSON file path")
-    parser.add_argument('--output_dir', '-od', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted'),
-                        help="output dir path")
-    parser.add_argument('--output_train', '-otr', type=str, default="formatted_json_train_jp.pkl", 
-                        help="output file name for train data")
-    parser.add_argument('--output_val', '-ov', type=str, default='formatted_json_val_jp.pkl',
-                        help="output file name for val data")
+    DEFAULT_INPUT_TRAIN_PATH = Path('data/captions/original/STAIR_Captions/stair_captions_v1.1_train.json')
+    DEFAULT_INPUT_VAL_PATH = Path('data/captions/original/STAIR_Captions/stair_captions_v1.1_val.json')
+    DEFAULT_OUTPUT_PATH = Path('data/captions/converted')
+
+    parser = argparse.ArgumentParser(
+        description='convert MS COCO formatted json to originally formatted ones'
+    )
+    parser.add_argument(
+        '--input_train', '-itr', type=str,
+        default=DEFAULT_INPUT_TRAIN_PATH.as_posix(),
+        help="input train JSON file path"
+    )
+    parser.add_argument(
+        '--exist_val', '-ev', action='store_true',
+        help="Validation file is exist"
+    )
+    parser.add_argument(
+        '--input_val', '-iva', type=str,
+        default=DEFAULT_INPUT_VAL_PATH.as_posix(),
+        help="input val JSON file path"
+    )
+    parser.add_argument(
+        '--output_dir', '-od', type=str,
+        default=DEFAULT_OUTPUT_PATH.as_posix(),
+        help="output dir path"
+    )
+    parser.add_argument(
+        '--output_train', '-otr', type=str,
+        default="formatted_json_train_jp.pkl",
+        help="output file name for train data"
+    )
+    parser.add_argument(
+        '--output_val', '-ov', type=str,
+        default='formatted_json_val_jp.pkl',
+        help="output file name for val data"
+    )
     args = parser.parse_args()
 
     imgs_t, annots_t = read_mscoco(args.input_train)
     itoa_t = make_groups(annots_t)
     out_data_t = create_converted(itoa_t, imgs_t)
-    out_path_t = os.path.join(args.output_dir  , args.output_train)
+    out_path_t = Path(args.output_dir) / args.output_train
     save_mscoco(out_data_t, out_path_t)
 
     if args.exist_val:
         imgs_v, annots_v = read_mscoco(args.input_val)
         itoa_v = make_groups(annots_v)
         out_data_v = create_converted(itoa_v, imgs_v)
-        out_path_v = os.path.join(args.output_dir  , args.output_val)
+        out_path_v = Path(args.output_dir) / args.output_val
         save_mscoco(out_data_v, out_path_v)
-    
+
     print('Saved pkl files to', args.output_dir)

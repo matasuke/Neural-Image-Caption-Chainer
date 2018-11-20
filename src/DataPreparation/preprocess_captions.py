@@ -1,8 +1,9 @@
-import os
+from pathlib import Path
 import argparse
 import pickle
 from numpy import random
 from tqdm import tqdm
+
 
 class Tokenizer(object):
     def __init__(self, args):
@@ -12,17 +13,17 @@ class Tokenizer(object):
         if self.lang == 'jp':
             from janome.tokenizer import Tokenizer
             self.t = Tokenizer()
-            self.segmenter= lambda sentence: list(token.surface for token in self.t.tokenize(sentence))
+            self.segmenter = lambda sentence: list(token.surface for token in self.t.tokenize(sentence))
 
         elif self.lang == 'ch':
             import jieba
-            self.segmenter= lambda sentence: list(jieba.cut(sentence))
+            self.segmenter = lambda sentence: list(jieba.cut(sentence))
 
         elif self.lang == 'en':
             import nltk
             self.nltk = nltk
             self.segmenter = lambda sentence: list(nltk.word_tokenize(sentence))
-        
+
         elif self.lang == 'kr':
             from konlpy.tag import Kkma
             self.kkma = Kkma()
@@ -37,7 +38,7 @@ class Tokenizer(object):
 
 
 def token2index(tokens, word_index):
-    return [ word_index[token] if token in word_index else word_index['<UNK>'] for token in tokens ]
+    return [word_index[token] if token in word_index else word_index['<UNK>'] for token in tokens]
 
 def load_pickle(p_file):
     with open(p_file, 'rb') as f:
@@ -49,12 +50,12 @@ def save_pickle(out_data, p_file):
         pickle.dump(out_data, f, pickle.HIGHEST_PROTOCOL)
 
 def create_captions(formatted_json, tokenizer):
-    
+
     img_idx = 0
     caption_idx = 0
     captions = []
     images = []
-   
+
     for img in tqdm(formatted_json):
         if 'tokenized_captions' in img:
             for caption in img['tokenized_captions']:
@@ -80,30 +81,30 @@ def create_captions(formatted_json, tokenizer):
 
 def create_dict(captions, off):
     word_counter = {}
-    word_index = { '<S>': 0, '</S>': 1, '<UNK>': 2, }
-    
-    #create vocabrary dictonary
+    word_index = {'<S>': 0, '</S>': 1, '<UNK>': 2, }
+
+    # create vocabrary dictonary
     for caption in tqdm(captions):
         tokens = caption['caption']
-        
+
         for token in tokens:
             if token in word_counter:
                 word_counter[token] += 1
             else:
                 word_counter[token] = 1
-    
+
     print('total distinct words:', len(word_counter))
     print('top 30 frequent words:')
     sorted_word = sorted(word_counter.items(), key=lambda x: x[1], reverse=True)
     for word, freq in sorted_word[:30]:
         print('{0} - {1}'.format(word, freq))
 
-    #create dict by cuttinf off some words
+    # create dict by cuttinf off some words
     for word, num in tqdm(word_counter.items()):
         if num > off:
             if word not in word_index:
                 word_index[word] = len(word_index)
-    
+
     print('total distinct words more than {0} : {1}'.format(args.off, len(word_index)))
 
     return word_index
@@ -111,7 +112,7 @@ def create_dict(captions, off):
 def encode_captions(captions, word_index):
     for caption in tqdm(captions):
         caption['caption'] = token2index(caption['caption'], word_index)
-    
+
     return captions
 
 def make_dataset_bleu(formatted_data, tokenizer):
@@ -123,75 +124,100 @@ def make_dataset_bleu(formatted_data, tokenizer):
             img['tokenized_captions'] = []
             for caption in img['captions']:
                 img['tokenized_captions'].append(tokenizer.pre_process(caption))
-    
+
     return formatted_data
 
+
 if __name__ == '__main__':
+
+    DEFAULT_INPUT_TRAIN_PATH = Path('data/captions/converted/formatted_json_train_jp.pkl')
+    DEFAULT_INPUT_VAL_PATH = Path('data/captions/converted/formatted_json_val_jp.pkl')
+    DEFAULT_OUTPUT_TRAIN_PATH = Path('data/captions/processed/dataset_STAIR_jp.pkl')
+    DEFAULT_OUTPUT_VAL_PATH = Path('data/captions/processed/dataset_STAIR_jp_bleu.pkl')
+    DEFAULT_OUTPUT_DICT_PATH = Path('data/vocab_dict/dict_STAIR_jp_train.pkl')
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_train', '-it', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted', 'formatted_json_train_jp.pkl'),
-                        help="input formatted JSON train file"
+    parser.add_argument(
+        '--input_train', '-it', type=str,
+        default=DEFAULT_INPUT_TRAIN_PATH.as_posix(),
+        help="input formatted JSON train file"
     )
-    parser.add_argument('--exist_val', '-ev', action='store_true',
-                        help="exist validation file or not"
+    parser.add_argument(
+        '--exist_val', '-ev', action='store_true',
+        help="exist validation file or not"
     )
-    parser.add_argument('--input_val', '-iv', type=str, default=os.path.join('..', '..', 'data', 'captions', 'converted', 'formatted_json_val_jp.pkl'),
-                        help="input formatted JSON val file"
+    parser.add_argument(
+        '--input_val', '-iv', type=str,
+        default=DEFAULT_INPUT_VAL_PATH,
+        help="input formatted JSON val file"
     )
-    parser.add_argument('--output_dataset_path', '-odap', type=str, default=os.path.join('..', '..', 'data', 'captions', 'processed', 'dataset_STAIR_jp.pkl'),
-                        help="output file name"
+    parser.add_argument(
+        '--output_dataset_path', '-odap', type=str,
+        default=DEFAULT_OUTPUT_TRAIN_PATH,
+        help="output file name"
     )
-    parser.add_argument('--output_dataset_bleu_path', '-odb', type=str, default=os.path.join('..', '..', 'data', 'captions', 'blue', 'dataset_STAIR_jp_bleu.pkl'),
-                        help="output dataset path of validation and test data for calculating bleu score")
-    parser.add_argument('--output_dict_path', '-odip', type=str, default=os.path.join('..', '..', 'data', 'vocab_dict', 'dcit_STAIR_jp_train.pkl'),
-                        help="output file name"
+    parser.add_argument(
+        '--output_dataset_bleu_path', '-odb', type=str,
+        default=DEFAULT_OUTPUT_VAL_PATH,
+        help="output dataset path of validation and test data for calculating bleu score"
     )
-    parser.add_argument('--lang', '-l', type=str, choices=['jp', 'en', 'ch', 'kr'], default="jp",
-                        help="dataset language you want to analyze"
+    parser.add_argument(
+        '--output_dict_path', '-odip', type=str,
+        default=DEFAULT_OUTPUT_DICT_PATH,
+        help="output file name"
     )
-    parser.add_argument('--off', '-o', type=int, default=5,
-                        help="min number of word frequency in words dict"
+    parser.add_argument(
+        '--lang', '-l', type=str,
+        choices=['jp', 'en', 'ch', 'kr'], default="jp",
+        help="dataset language you want to analyze"
     )
-    parser.add_argument('--lower', '-lw', action='store_true',
-                        help="lower all of the characters in captions"
+    parser.add_argument(
+        '--off', '-o', type=int, default=5,
+        help="min number of word frequency in words dict"
     )
-    parser.add_argument('--period', '-p', action='store_true',
-                        help="remove periods if captions has it"
+    parser.add_argument(
+        '--lower', '-lw', action='store_true',
+        help="lower all of the characters in captions"
     )
-    parser.add_argument('--ratio', '-r', type=float, default=0.5,
-                        help="The ratio of validation data"
+    parser.add_argument(
+        '--period', '-p', action='store_true',
+        help="remove periods if captions has it"
+    )
+    parser.add_argument(
+        '--ratio', '-r', type=float, default=0.5,
+        help="The ratio of validation data"
     )
     args = parser.parse_args()
 
     output_dataset = {}
     tokenizer = Tokenizer(args)
-    
+
     formatted_train = load_pickle(args.input_train)
     train_captions, train_images = create_captions(formatted_train, tokenizer)
     word_index = create_dict(train_captions, args.off)
     train_captions = encode_captions(train_captions, word_index)
     output_dataset['train'] = {'images': train_images, 'captions': train_captions}
-    
+
     if args.exist_val:
         formatted_val = load_pickle(args.input_val)
-        
+
         random.seed(0)
         random.shuffle(formatted_val)
         val_img_num = int(len(formatted_val) * args.ratio)
         val_data = formatted_val[:val_img_num]
         test_data = formatted_val[val_img_num:]
-        
-        val_captions, val_images = create_captions(val_data, tokenizer) 
+
+        val_captions, val_images = create_captions(val_data, tokenizer)
         val_captions = encode_captions(val_captions, word_index)
-        
-        test_captions, test_images = create_captions(test_data, tokenizer) 
+
+        test_captions, test_images = create_captions(test_data, tokenizer)
         test_captions = encode_captions(test_captions, word_index)
 
-        output_dataset['val'] = { 'images': val_images, 'captions': val_captions }
-        output_dataset['test'] = { 'images': test_images, 'captions': test_captions }
+        output_dataset['val'] = {'images': val_images, 'captions': val_captions}
+        output_dataset['test'] = {'images': test_images, 'captions': test_captions}
 
-        #bleu
         dataset_bleu = {}
-        formatted_val = make_dataset_bleu(val_data, tokenizer) 
+        formatted_val = make_dataset_bleu(val_data, tokenizer)
         formatted_test = make_dataset_bleu(test_data, tokenizer)
         dataset_bleu['val'] = formatted_val
         dataset_bleu['test'] = formatted_test

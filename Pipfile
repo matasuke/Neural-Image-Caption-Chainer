@@ -1,0 +1,32 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[scripts]
+test = "pytest"
+jupyter = "jupyter notebook"
+get_coverage = "python -m pytest --cov=./"
+pytest = "python im pytest -vv"
+
+[packages]
+chainer = ">=3.0.0"
+jieba = "*"
+matplotlib = "*"
+nltk = "*"
+numpy = "*"
+opencv-python = "*"
+requests = "*"
+tqdm = "*"
+Flask = "*"
+Janome = "*"
+
+[dev-packages]
+codecov = "*"
+flake8 = "==3.5.0"
+mypy = "*"
+pytest = "*"
+pytest-cov="*"
+
+[requires]
+python_version = "3.6.5"

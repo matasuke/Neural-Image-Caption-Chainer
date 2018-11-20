@@ -32,7 +32,15 @@ class BottleNeckB(chainer.Chain):
     def __init__(self, in_size, ch):
         w = math.sqrt(2)
         super(BottleNeckB, self).__init__(
-            conv1=L.Convolution2D(in_channels=in_size, out_channels=ch, ksize=1, stride=1, pad=0, initialW=w, nobias=True),
+            conv1=L.Convolution2D(
+                in_channels=in_size,
+                out_channels=ch,
+                ksize=1,
+                stride=1,
+                pad=0,
+                initialW=w,
+                nobias=True
+            ),
             bn1=L.BatchNormalization(ch),
             conv2=L.Convolution2D(ch, ch, 3, 1, 1, initialW=w, nobias=True),
             bn2=L.BatchNormalization(ch),
@@ -103,7 +111,7 @@ class ResNet(chainer.Chain):
         if chainer.config.train:
             self.loss = F.softmax_cross_entropy(h, t)
             self.accuracy = F.accuracy(h, t)
-            
+
             return self.loss
         else:
             return F.softmax(h)
